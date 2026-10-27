@@ -1,0 +1,62 @@
+# .github/workflows/deploy.yml
+# リポジトリにZipをアップロードするだけで、自動で展開してGitHub Pagesに公開します。
+name: Unzip and deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Zipを展開してコミット
+        run: |
+          shopt -s nullglob
+          zips=(*.zip)
+          [ ${#zips[@]} -eq 0 ] && exit 0
+          for z in "${zips[@]}"; do
+            tmp=$(mktemp -d)
+            unzip -q -o "$z" -d "$tmp"
+            rm -rf "$tmp/__MACOSX" "$tmp/.github"
+            # Zip内が1つのフォルダだけなら、その中身を直下に展開する
+            if [ "$(ls -A "$tmp" | wc -l)" -eq 1 ] && [ -d "$tmp/$(ls -A "$tmp")" ]; then
+              src="$tmp/$(ls -A "$tmp")"
+            else
+              src="$tmp"
+            fi
+            cp -a "$src"/. .
+            git rm -q -f -- "$z"
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Zipを自動展開" || true
+          git push
+
+      - name: 公開用ファイルを集める
+        run: |
+          mkdir _site
+          rsync -a --exclude='.git' --exclude='.github' --exclude='_site' --exclude='*.zip' ./ _site/
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
