@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#fef7ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="PDF Studio">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="style.css">
+<title>PDF Studio</title>
+</head>
+<body data-tool="select">
+
+<main id="viewer"><div id="pages"></div></main>
+
+<header id="bar">
+  <button class="ib" id="bHome" aria-label="ホーム"><i data-i="home"></i></button>
+  <button class="ib" id="bSide" aria-label="ページ一覧"><i data-i="grid"></i></button>
+  <div id="title">PDF Studio</div>
+  <div id="zoom">
+    <button class="ib" id="zOut" aria-label="縮小"><i data-i="zout"></i></button>
+    <button id="zLbl" aria-label="幅に合わせる">100%</button>
+    <button class="ib" id="zIn" aria-label="拡大"><i data-i="zin"></i></button>
+  </div>
+  <button class="ib" id="bInv" aria-label="ページを反転"><i data-i="moon"></i></button>
+  <button class="ib" id="bInfo" aria-label="詳細情報"><i data-i="info"></i></button>
+  <button class="ib" id="bFull" aria-label="全画面"><i data-i="full"></i></button>
+  <button class="ib" id="bExp" aria-label="書き込み入りPDFを保存"><i data-i="dl"></i></button>
+  <button class="ib" id="bOpen" aria-label="ファイルを開く"><i data-i="up"></i></button>
+</header>
+
+<aside id="side">
+  <div id="stabs"><button class="on" data-p="thumbs">ページ</button><button data-p="outl">しおり</button><button data-p="srch">検索</button></div>
+  <div id="thumbs"></div>
+  <div id="outl" hidden></div>
+  <div id="srch" hidden><input id="sq" type="search" placeholder="文字を検索（Enter）" enterkeyhint="search"><div id="sres"></div></div>
+</aside>
+
+<section id="home">
+  <div class="hero">
+    <img class="logo" src="icons/icon-192.png" alt="" width="84" height="84">
+    <h1>書いて、読む。<br>PDFをそのまま。</h1>
+    <p>Apple Pencilの筆圧で書き込み、テキストを置いて、全画面で読めます。ファイルは端末の外に出ません。</p>
+    <button class="big" id="hOpen"><i data-i="up"></i>ファイルを選ぶ</button>
+    <div class="drop">PDF・画像をここにドロップ</div>
+  </div>
+  <div id="recent"></div>
+</section>
+
+<div id="nav">
+  <button class="ib" id="pPrev" aria-label="前のページ"><i data-i="up2"></i></button>
+  <input id="pNum" type="number" inputmode="numeric" min="1" value="1"><span id="pTot">/ 1</span>
+  <button class="ib" id="pNext" aria-label="次のページ"><i data-i="dn2"></i></button>
+</div>
+
+<div id="props" class="off">
+  <div id="sw"></div>
+  <label class="row"><span id="szL">太さ</span><input id="sz" type="range" min="1" max="14" step="1"><output id="szV"></output></label>
+  <label class="row"><span>指でも描く</span><input id="finger" type="checkbox" class="switch"></label>
+</div>
+
+<nav id="dock">
+  <button class="tool on" data-t="select" aria-label="選択・スクロール"><i data-i="cur"></i></button>
+  <button class="tool" data-t="pen" aria-label="ペン"><i data-i="pen"></i></button>
+  <button class="tool" data-t="hl" aria-label="蛍光ペン"><i data-i="hl"></i></button>
+  <button class="tool" data-t="er" aria-label="消しゴム"><i data-i="er"></i></button>
+  <button class="tool" data-t="text" aria-label="テキストボックス"><i data-i="text"></i></button>
+  <span class="sep"></span>
+  <button class="tool" id="bUndo" aria-label="元に戻す"><i data-i="undo"></i></button>
+  <button class="tool" id="bRedo" aria-label="やり直す"><i data-i="redo"></i></button>
+</nav>
+
+<button id="exit" aria-label="全画面を終了"><i data-i="close"></i></button>
+<dialog id="info"></dialog>
+<div id="toast"></div>
+<input type="file" id="file" accept="application/pdf,.pdf,image/*" hidden>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

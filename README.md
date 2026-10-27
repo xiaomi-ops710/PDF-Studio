@@ -1,0 +1,20 @@
+# PDF Studio
+
+iPad向けPDFビューアPWA（Material 3 Expressive）。
+
+## 初回セットアップ（1回だけ）
+1. GitHubで新しいリポジトリを作成
+2. Settings → Pages → **Source を「GitHub Actions」** にする
+3. Settings → Actions → General → Workflow permissions を **Read and write permissions** にする
+4. リポジトリで「Add file → Create new file」を開き、ファイル名に `.github/workflows/deploy.yml` と入力して、同梱の `deploy.yml` の中身を貼り付けてコミット
+   （`.github` は隠しフォルダのため、アップロードではなく新規作成で入力するのが確実です）
+
+## 更新・デプロイ（毎回）
+`pdf-studio.zip` を「Add file → Upload files」でリポジトリ直下にアップロードしてコミットするだけです。
+Actionsが自動でZipを展開（フォルダ1つに包まれている場合は中身を直下へ）→ Zipを削除 → Pagesへ公開します。
+公開URLをiPadのSafariで開き、共有 → ホーム画面に追加。
+
+## 補足
+- 更新を確実に配信するときは sw.js の `V`（キャッシュ名）を変更してください。
+- PDF描画ライブラリ(pdf.js / pdf-lib)はcdnjsから読み込み、初回以降はService Workerがキャッシュします。
+- 書き込みと開いたファイルは端末内(IndexedDB)に保存されます。
