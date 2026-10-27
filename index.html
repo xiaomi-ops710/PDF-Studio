@@ -13,27 +13,34 @@
 <link rel="stylesheet" href="style.css">
 <title>PDF Studio</title>
 </head>
-<body data-tool="select">
+<body data-tool="select" class="nodoc">
 
 <main id="viewer"><div id="pages"></div></main>
 
 <header id="bar">
   <button class="ib" id="bHome" aria-label="ホーム"><i data-i="home"></i></button>
-  <button class="ib" id="bSide" aria-label="ページ一覧"><i data-i="grid"></i></button>
+  <button class="ib" id="bSide" aria-label="ページ一覧・検索"><i data-i="grid"></i></button>
   <div id="title">PDF Studio</div>
   <div id="zoom">
     <button class="ib" id="zOut" aria-label="縮小"><i data-i="zout"></i></button>
     <button id="zLbl" aria-label="幅に合わせる">100%</button>
     <button class="ib" id="zIn" aria-label="拡大"><i data-i="zin"></i></button>
   </div>
-  <button class="ib" id="bInv" aria-label="ページを反転"><i data-i="moon"></i></button>
-  <button class="ib" id="bInfo" aria-label="詳細情報"><i data-i="info"></i></button>
-  <button class="ib" id="bFull" aria-label="全画面"><i data-i="full"></i></button>
   <button class="ib" id="bExp" aria-label="書き込み入りPDFを保存"><i data-i="dl"></i></button>
-  <button class="ib" id="bOpen" aria-label="ファイルを開く"><i data-i="up"></i></button>
+  <button class="ib" id="bSet" aria-label="設定"><i data-i="gear"></i></button>
+  <button class="ib" id="bMore" aria-label="その他"><i data-i="more"></i></button>
 </header>
 
+<div id="menu" class="off">
+  <button id="bOrg"><i data-i="pages"></i>ページを整理・編集</button>
+  <button id="bInfo"><i data-i="info"></i>詳細情報</button>
+  <button id="bInv"><i data-i="moon"></i>ページを反転</button>
+  <button id="bFull"><i data-i="full"></i>全画面</button>
+  <button id="bOpen"><i data-i="up"></i>ファイルを開く</button>
+</div>
+
 <aside id="side">
+  <div class="sh"><span>ページ・検索</span><button class="ib" id="sClose" aria-label="閉じる"><i data-i="close"></i></button></div>
   <div id="stabs"><button class="on" data-p="thumbs">ページ</button><button data-p="outl">しおり</button><button data-p="srch">検索</button></div>
   <div id="thumbs"></div>
   <div id="outl" hidden></div>
@@ -41,15 +48,26 @@
 </aside>
 
 <section id="home">
-  <div class="hero">
+  <div class="hhead">
     <img class="logo" src="icons/icon-192.png" alt="" width="84" height="84">
-    <h1>書いて、読む。<br>PDFをそのまま。</h1>
-    <p>Apple Pencilの筆圧で書き込み、テキストを置いて、全画面で読めます。ファイルは端末の外に出ません。</p>
-    <button class="big" id="hOpen"><i data-i="up"></i>ファイルを選ぶ</button>
-    <div class="drop">PDF・画像をここにドロップ</div>
+    <div><h1>PDF Studio</h1><p>書いて、読む。PDFをそのまま。</p></div>
   </div>
+  <label class="sbar"><i data-i="search"></i><input id="hq" type="search" placeholder="最近のファイルを検索"></label>
+  <div class="chips" id="hch"><button class="on" data-s="date">新しい順</button><button data-s="name">名前順</button><button data-s="size">サイズ順</button></div>
   <div id="recent"></div>
+  <div class="drop">PDF・画像をここにドロップして開く</div>
 </section>
+<nav id="rail">
+  <button class="rfab" id="rfab" aria-label="新規・開く"><i data-i="plus"></i></button>
+  <button class="ri on" id="rHome"><span class="pill"><i data-i="home"></i></span>ホーム</button>
+  <button class="ri" id="rSet"><span class="pill"><i data-i="gear"></i></span>設定</button>
+</nav>
+<div id="fabm" class="off">
+  <button data-f="pdf"><i data-i="pages"></i>PDFを開く</button>
+  <button data-f="img"><i data-i="photo"></i>画像からPDFを作成</button>
+  <button data-f="cam"><i data-i="cam"></i>写真を撮ってPDFに</button>
+</div>
+<button id="fab"><i data-i="plus"></i>新規・開く</button>
 
 <div id="nav">
   <button class="ib" id="pPrev" aria-label="前のページ"><i data-i="up2"></i></button>
@@ -58,6 +76,7 @@
 </div>
 
 <div id="props" class="off">
+  <nav id="shp" class="seg" style="display:none"><button data-k="line">線</button><button data-k="arrow">矢印</button><button data-k="rect" class="on">四角</button><button data-k="ell">楕円</button></nav>
   <div id="sw"></div>
   <label class="row"><span id="szL">太さ</span><input id="sz" type="range" min="1" max="14" step="1"><output id="szV"></output></label>
   <label class="row"><span>指でも描く</span><input id="finger" type="checkbox" class="switch"></label>
@@ -67,17 +86,45 @@
   <button class="tool on" data-t="select" aria-label="選択・スクロール"><i data-i="cur"></i></button>
   <button class="tool" data-t="pen" aria-label="ペン"><i data-i="pen"></i></button>
   <button class="tool" data-t="hl" aria-label="蛍光ペン"><i data-i="hl"></i></button>
+  <button class="tool" data-t="shape" aria-label="図形"><i data-i="shape"></i></button>
   <button class="tool" data-t="er" aria-label="消しゴム"><i data-i="er"></i></button>
   <button class="tool" data-t="text" aria-label="テキストボックス"><i data-i="text"></i></button>
-  <span class="sep"></span>
+</nav>
+<div id="ur">
   <button class="tool" id="bUndo" aria-label="元に戻す"><i data-i="undo"></i></button>
   <button class="tool" id="bRedo" aria-label="やり直す"><i data-i="redo"></i></button>
-</nav>
+</div>
+
+<section id="org">
+  <header class="obar">
+    <button class="ib" id="oClose" aria-label="閉じる"><i data-i="close"></i></button>
+    <div id="oTitle">ページを整理</div>
+    <button class="fabx" id="oApply"><i data-i="check"></i>適用</button>
+  </header>
+  <div id="ochips">
+    <button data-a="all"><i data-i="check"></i>全選択</button>
+    <button data-a="rl"><i data-i="rotl"></i>左回転</button>
+    <button data-a="rr"><i data-i="rotr"></i>右回転</button>
+    <button data-a="l"><i data-i="left"></i>前へ</button>
+    <button data-a="r"><i data-i="right"></i>後ろへ</button>
+    <button data-a="dup"><i data-i="copy"></i>複製</button>
+    <button data-a="del"><i data-i="trash"></i>削除</button>
+    <button data-a="blank"><i data-i="plus"></i>白紙を追加</button>
+    <button data-a="merge"><i data-i="merge"></i>PDF・画像を挿入</button>
+    <button data-a="ext"><i data-i="dl"></i>選択を書き出し</button>
+  </div>
+  <div id="ogrid"></div>
+</section>
 
 <button id="exit" aria-label="全画面を終了"><i data-i="close"></i></button>
 <dialog id="info"></dialog>
+<dialog id="set"></dialog>
+<div id="busy"><div class="bx"><div class="ld"></div><div id="busyT"></div><div class="lp" style="width:150px"><i class="lpf" style="width:100%"></i></div></div></div>
 <div id="toast"></div>
 <input type="file" id="file" accept="application/pdf,.pdf,image/*" hidden>
+<input type="file" id="fileImg" accept="image/*" hidden>
+<input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+<input type="file" id="file2" accept="application/pdf,.pdf,image/*" hidden>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
