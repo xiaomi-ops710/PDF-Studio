@@ -53,11 +53,14 @@
     <div class="zrow keep"><button class="ib keep" id="zOut" aria-label="縮小"><i data-i="zout"></i></button><button class="keep" id="zLbl">100%</button><button class="ib keep" id="zIn" aria-label="拡大"><i data-i="zin"></i></button></div>
     <nav class="seg keep"><button class="keep" id="fW">幅に合わせる</button><button class="keep" id="fP">ページ全体</button></nav>
     <nav class="seg keep"><button class="keep" id="vC">連続</button><button class="keep" id="vD">見開き</button></nav>
+    <nav class="seg keep"><button class="keep" data-tn="n">標準</button><button class="keep" data-tn="s">セピア</button><button class="keep" data-tn="g">モノクロ</button></nav>
     <button id="bInv"><i data-i="moon"></i>ページを反転</button>
     <button id="bFull"><i data-i="full"></i>全画面</button>
   </div>
   <hr>
   <button id="bRead"><i data-i="volume_up"></i>読み上げ</button>
+  <button id="bAuto"><i data-i="swipe_vertical"></i>自動スクロール</button>
+  <button id="bHide"><i data-i="visibility_off"></i>書き込みを隠す</button>
   <button id="bOrg"><i data-i="org"></i>ページを整理</button>
   <button id="bCmp"><i data-i="compress"></i>PDFを圧縮</button>
   <button id="bMrg"><i data-i="merge"></i>ファイルを結合</button>
@@ -76,7 +79,7 @@
   <div class="sh"><span>ページ・検索</span><button class="ib" id="sClose" aria-label="閉じる"><i data-i="close"></i></button></div>
   <div id="stabs"><button class="on" data-p="thumbs">ページ</button><button data-p="outl">しおり</button><button data-p="srch">検索</button><button data-p="cmt">コメント</button></div>
   <div id="thumbs"></div>
-  <div id="outl" hidden></div>
+  <div id="outl" hidden><div id="bml"></div><div id="olt"></div></div>
   <div id="cmt" hidden></div>
   <div id="srch" hidden><input id="sq" type="search" placeholder="文字を検索（Enter）" enterkeyhint="search"><div id="sres"></div></div>
 </aside>
@@ -99,6 +102,7 @@
 </nav>
 <button id="fab" aria-label="新規・開く"><i data-i="plus"></i></button>
 <div id="fabm" class="off">
+  <button data-f="note"><i data-i="edit_note"></i>ノートを作成</button>
   <button data-f="pdf"><i data-i="pages"></i>PDFを開く</button>
   <button data-f="img"><i data-i="photo"></i>画像からPDFを作成</button>
   <button data-f="cam"><i data-i="cam"></i>写真を撮ってPDFに</button>
@@ -106,6 +110,7 @@
 
 <nav id="rtool">
   <button class="ib" id="bCmt" aria-label="コメント"><i data-i="comment"></i></button>
+  <button class="ib" id="bBm" aria-label="しおりを追加"><i data-i="bookmark"></i></button>
   <button class="ib" id="bSide" aria-label="ページ一覧"><i data-i="grid"></i></button>
 </nav>
 <div id="nav">
@@ -114,12 +119,8 @@
   <input id="pNum" type="number" inputmode="numeric" min="1" value="1"><span id="pTot">1</span>
 </div>
 
-<div id="props" class="off">
-  <nav id="shp" class="seg" style="display:none"><button data-k="line">線</button><button data-k="arrow">矢印</button><button data-k="rect" class="on">四角</button><button data-k="ell">楕円</button></nav>
-  <div id="sw"></div>
-  <label class="row"><span id="szL">太さ</span><input id="sz" type="range" min="1" max="14" step="1"><output id="szV"></output></label>
-  <label class="row"><span>指でも描く</span><input id="finger" type="checkbox" class="switch"></label>
-</div>
+<div id="props" class="off"></div>
+<input type="checkbox" id="finger" hidden>
 
 <nav id="dock">
   <button class="tool on" data-t="select" aria-label="選択"><i data-i="cur"></i></button>
@@ -136,6 +137,7 @@
   <button class="tool" id="bFill" aria-label="入力と署名"><i data-i="sign"></i><span class="tri"></span></button>
 </nav>
 
+<div id="asbar"><button class="ib" id="asMinus" aria-label="遅く"><i data-i="remove"></i></button><span>速さ <b id="asV">3</b></span><button class="ib" id="asPlus" aria-label="速く"><i data-i="add"></i></button><button id="asStop">停止</button></div>
 <div id="rdbar"><i data-i="volume_up"></i><span>読み上げ中</span><button id="rdStop">停止</button></div>
 
 <section id="org">
@@ -170,6 +172,7 @@
 <dialog id="sig"></dialog>
 <dialog id="stamps"></dialog>
 <dialog id="opt"></dialog>
+<dialog id="metad"></dialog>
 <div id="busy"><div class="bx"><div class="ld"></div><div id="busyT"></div><div class="lp" style="width:150px"><i class="lpf" style="width:100%"></i></div></div></div>
 <div id="toast"></div>
 <input type="file" id="file" accept="application/pdf,.pdf,image/*" hidden>
