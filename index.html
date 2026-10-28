@@ -10,10 +10,13 @@
 <meta name="apple-mobile-web-app-title" content="PDF Studio">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block">
 <link rel="stylesheet" href="style.css">
 <title>PDF Studio</title>
 </head>
-<body data-tool="select" class="nodoc">
+<body data-tool="select" data-mode="v" class="nodoc">
 
 <main id="viewer"><div id="pages"></div></main>
 
@@ -41,9 +44,10 @@
 
 <aside id="side">
   <div class="sh"><span>ページ・検索</span><button class="ib" id="sClose" aria-label="閉じる"><i data-i="close"></i></button></div>
-  <div id="stabs"><button class="on" data-p="thumbs">ページ</button><button data-p="outl">しおり</button><button data-p="srch">検索</button></div>
+  <div id="stabs"><button class="on" data-p="thumbs">ページ</button><button data-p="outl">しおり</button><button data-p="srch">検索</button><button data-p="cmt">コメント</button></div>
   <div id="thumbs"></div>
   <div id="outl" hidden></div>
+  <div id="cmt" hidden></div>
   <div id="srch" hidden><input id="sq" type="search" placeholder="文字を検索（Enter）" enterkeyhint="search"><div id="sres"></div></div>
 </aside>
 
@@ -60,6 +64,7 @@
 <nav id="rail">
   <button class="rfab" id="rfab" aria-label="新規・開く"><i data-i="plus"></i></button>
   <button class="ri on" id="rHome"><span class="pill"><i data-i="home"></i></span>ホーム</button>
+  <button class="ri" id="rTools"><span class="pill"><i data-i="tools"></i></span>ツール</button>
   <button class="ri" id="rSet"><span class="pill"><i data-i="gear"></i></span>設定</button>
 </nav>
 <div id="fabm" class="off">
@@ -83,17 +88,38 @@
 </div>
 
 <nav id="dock">
-  <button class="tool on" data-t="select" aria-label="選択・スクロール"><i data-i="cur"></i></button>
-  <button class="tool" data-t="pen" aria-label="ペン"><i data-i="pen"></i></button>
-  <button class="tool" data-t="hl" aria-label="蛍光ペン"><i data-i="hl"></i></button>
-  <button class="tool" data-t="shape" aria-label="図形"><i data-i="shape"></i></button>
-  <button class="tool" data-t="er" aria-label="消しゴム"><i data-i="er"></i></button>
-  <button class="tool" data-t="text" aria-label="テキストボックス"><i data-i="text"></i></button>
+  <button class="tool on" data-t="select" data-g="c f" aria-label="選択"><i data-i="cur"></i></button>
+  <button class="tool" data-t="hlt" data-g="c" aria-label="テキストをハイライト"><i data-i="hlt"></i></button>
+  <button class="tool" data-t="ult" data-g="c" aria-label="下線"><i data-i="ult"></i></button>
+  <button class="tool" data-t="stt" data-g="c" aria-label="取り消し線"><i data-i="stt"></i></button>
+  <button class="tool" data-t="note" data-g="c" aria-label="付箋"><i data-i="note"></i></button>
+  <button class="tool" data-t="text" data-g="c f" aria-label="テキスト"><i data-i="text"></i></button>
+  <button class="tool" data-t="pen" data-g="c" aria-label="ペン"><i data-i="pen"></i></button>
+  <button class="tool" data-t="hl" data-g="c" aria-label="蛍光ペン"><i data-i="hl"></i></button>
+  <button class="tool" data-t="shape" data-g="c" aria-label="図形"><i data-i="shape"></i></button>
+  <button class="tool" data-t="check" data-g="f" aria-label="チェック"><i data-i="check"></i></button>
+  <button class="tool" data-t="cross" data-g="f" aria-label="バツ"><i data-i="cross"></i></button>
+  <button class="tool" data-t="dot" data-g="f" aria-label="丸"><i data-i="dot"></i></button>
+  <button class="tool" data-t="date" data-g="f" aria-label="日付"><i data-i="date"></i></button>
+  <button class="tool" data-t="sign" data-g="f" aria-label="署名"><i data-i="sign"></i></button>
+  <button class="tool" data-t="stamp" data-g="f" aria-label="スタンプ"><i data-i="stamp"></i></button>
+  <button class="tool" data-t="pic" data-g="f" aria-label="画像"><i data-i="pic"></i></button>
+  <button class="tool" data-t="er" data-g="c f" aria-label="消しゴム"><i data-i="er"></i></button>
+  <span class="sep"></span>
+  <button class="tool tc" id="bUndo" data-g="c f" aria-label="元に戻す"><i data-i="undo"></i></button>
+  <button class="tool tc" id="bRedo" data-g="c f" aria-label="やり直す"><i data-i="redo"></i></button>
 </nav>
-<div id="ur">
-  <button class="tool" id="bUndo" aria-label="元に戻す"><i data-i="undo"></i></button>
-  <button class="tool" id="bRedo" aria-label="やり直す"><i data-i="redo"></i></button>
-</div>
+<nav id="drail">
+  <button class="ri on" data-m="v"><span class="pill"><i data-i="view"></i></span>表示</button>
+  <button class="ri" data-m="c"><span class="pill"><i data-i="comment"></i></span>コメント</button>
+  <button class="ri" data-m="f"><span class="pill"><i data-i="sign"></i></span>入力と署名</button>
+  <button class="ri" id="dOrg"><span class="pill"><i data-i="org"></i></span>整理</button>
+  <button class="ri" id="dTools"><span class="pill"><i data-i="tools"></i></span>ツール</button>
+</nav>
+<section id="tools">
+  <header class="obar"><button class="ib" id="tClose" aria-label="閉じる"><i data-i="close"></i></button><div id="oTitle" style="flex:1;font-size:22px;font-weight:700">ツール</div></header>
+  <div id="tgrid"></div>
+</section>
 
 <section id="org">
   <header class="obar">
@@ -119,11 +145,16 @@
 <button id="exit" aria-label="全画面を終了"><i data-i="close"></i></button>
 <dialog id="info"></dialog>
 <dialog id="set"></dialog>
+<dialog id="sig"></dialog>
+<dialog id="stamps"></dialog>
+<dialog id="opt"></dialog>
 <div id="busy"><div class="bx"><div class="ld"></div><div id="busyT"></div><div class="lp" style="width:150px"><i class="lpf" style="width:100%"></i></div></div></div>
 <div id="toast"></div>
 <input type="file" id="file" accept="application/pdf,.pdf,image/*" hidden>
 <input type="file" id="fileImg" accept="image/*" hidden>
 <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
+<input type="file" id="fileG" accept="image/*" hidden>
+<input type="file" id="fileM" accept="application/pdf,.pdf,image/*" multiple hidden>
 <input type="file" id="file2" accept="application/pdf,.pdf,image/*" hidden>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
