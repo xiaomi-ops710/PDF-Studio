@@ -19,6 +19,7 @@
 <body data-tool="select" data-mode="v" data-hv="home" class="nodoc">
 
 <main id="viewer"><div id="pages"></div></main>
+<div id="rp"><i id="rpf"></i></div>
 
 <header id="bar">
   <div class="dg">
@@ -51,6 +52,7 @@
   <button class="keep" id="mView"><i data-i="visibility"></i>表示設定<i class="chev" data-i="chevron_right"></i></button>
   <div id="mVw" class="keep" hidden>
     <div class="zrow keep"><button class="ib keep" id="zOut" aria-label="縮小"><i data-i="zout"></i></button><button class="keep" id="zLbl">100%</button><button class="ib keep" id="zIn" aria-label="拡大"><i data-i="zin"></i></button></div>
+    <nav class="chips2 keep" id="zp"><button class="keep" data-zp="0.5">50%</button><button class="keep" data-zp="0.75">75%</button><button class="keep" data-zp="1">100%</button><button class="keep" data-zp="1.5">150%</button><button class="keep" data-zp="2">200%</button></nav>
     <nav class="seg keep"><button class="keep" id="fW">幅に合わせる</button><button class="keep" id="fP">ページ全体</button></nav>
     <nav class="seg keep"><button class="keep" id="vC">連続</button><button class="keep" id="vD">見開き</button></nav>
     <nav class="seg keep"><button class="keep" data-tn="n">標準</button><button class="keep" data-tn="s">セピア</button><button class="keep" data-tn="g">モノクロ</button></nav>
@@ -73,6 +75,8 @@
   <hr>
   <button id="bOpen"><i data-i="up"></i>ファイルを開く</button>
   <button id="bSet2"><i data-i="gear"></i>設定</button>
+  <button id="bGuide"><i data-i="help"></i>使い方ガイド</button>
+  <hr><div class="oh">最近のファイル</div><div id="mRec"></div>
 </div>
 
 <aside id="side">
@@ -86,7 +90,7 @@
 
 <section id="home">
   <div class="hv hv-home"><h1 class="greet">ようこそ</h1><p class="gsub">次におこなう操作を選択してください。</p><div id="qt"></div></div>
-  <div class="hv hv-files"><h1 class="greet">ファイル</h1></div>
+  <div class="hv hv-files gh"><h1 class="greet">ファイル</h1><button class="ib" id="gtog" aria-label="表示切替"><i data-i="grid_view"></i></button></div>
   <label class="sbar hv hv-search"><i data-i="search"></i><input id="hq" type="search" placeholder="ファイル名で検索"></label>
   <nav class="htabs hv hv-home hv-files" id="htabs"><button class="on" data-t="recent">最近使用したファイル</button><button data-t="star">スター付き</button></nav>
   <div class="chips hv hv-files" id="hch"><button class="on" data-s="date">新しい順</button><button data-s="name">名前順</button><button data-s="size">サイズ順</button></div>
@@ -113,6 +117,7 @@
   <button class="ib" id="bBm" aria-label="しおりを追加"><i data-i="bookmark"></i></button>
   <button class="ib" id="bSide" aria-label="ページ一覧"><i data-i="grid"></i></button>
 </nav>
+<div id="psl"><input id="pslR" type="range" min="1" max="1" value="1" aria-label="ページ"><span id="pslL">1 / 1</span></div>
 <div id="nav">
   <button class="ib" id="pPrev" aria-label="前のページ"><i data-i="up2"></i></button>
   <button class="ib" id="pNext" aria-label="次のページ"><i data-i="dn2"></i></button>
@@ -162,7 +167,7 @@
 </section>
 
 <section id="tools">
-  <header class="obar"><button class="ib" id="tClose" aria-label="閉じる"><i data-i="close"></i></button><div style="flex:1;font-size:22px;font-weight:700">ツール</div></header>
+  <header class="obar"><button class="ib" id="tClose" aria-label="閉じる"><i data-i="close"></i></button><div style="font-size:22px;font-weight:700">ツール</div><input id="tq" class="tq" type="search" placeholder="ツールを検索"></header>
   <div id="tgrid"></div>
 </section>
 
@@ -173,6 +178,7 @@
 <dialog id="stamps"></dialog>
 <dialog id="opt"></dialog>
 <dialog id="metad"></dialog>
+<dialog id="guide"></dialog>
 <div id="busy"><div class="bx"><div class="ld"></div><div id="busyT"></div><div class="lp" style="width:150px"><i class="lpf" style="width:100%"></i></div></div></div>
 <div id="toast"></div>
 <input type="file" id="file" accept="application/pdf,.pdf,image/*" hidden>
@@ -180,6 +186,7 @@
 <input type="file" id="fileCam" accept="image/*" capture="environment" hidden>
 <input type="file" id="fileG" accept="image/*" hidden>
 <input type="file" id="fileM" accept="application/pdf,.pdf,image/*" multiple hidden>
+<input type="file" id="fileB" accept="application/json,.json" hidden>
 <input type="file" id="file2" accept="application/pdf,.pdf,image/*" hidden>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

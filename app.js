@@ -13,7 +13,7 @@ return{put:(s,v)=>tx(s,'readwrite',o=>o.put(v)),get:(s,k)=>tx(s,'readonly',o=>o.
 /* ---------- state ---------- */
 const S={pdf:null,id:'',name:'',bytes:null,size:0,meta:null,zoom:1,sizes:[],els:[],ann:{},hist:[],hi:-1,tool:'select',col:{pen:'#1d1b20',hl:'#ffeb3b',tx:'#1d1b20',ul:'#1565c0',st:'#d32f2f'},w:{pen:3,hl:18,er:14,tx:20},cur:1,tb:null};
 S.shape='rect';
-const CFG=Object.assign({mode:'auto',seed:'#6750a4',fit:'w',gap:14,sens:1,finger:false,view:'c',tone:'n',snap:0,edge:0,asp:3},JSON.parse(localStorage.getItem('ps-cfg')||'{}'));
+const CFG=Object.assign({mode:'auto',seed:'#6750a4',fit:'w',gap:14,sens:1,finger:false,view:'c',tone:'n',snap:0,edge:0,asp:3,autohide:1,resume:0,grid:0},JSON.parse(localStorage.getItem('ps-cfg')||'{}'));
 const POS=JSON.parse(localStorage.getItem('ps-pos')||'{}'),DRAW=['pen','hl','er','shape'];
 const COLORS=['#1d1b20','#d32f2f','#ef6c00','#fbc02d','#ffeb3b','#2e7d32','#1565c0','#6750a4','#d81b60'];
 const RANGE={pen:[1,14],hl:[6,40],er:[6,50],tx:[8,72]};
@@ -43,7 +43,7 @@ async function load(buf,name,ann){
     while(S.sizes.length<n)S.sizes.push(S.sizes[0]);
     const sv=ann?null:await DB.get('annots',S.id).catch(()=>0);S.ann=ann||(sv?sv.data:{});S.hist=[JSON.stringify(S.ann)];S.hi=0;
     document.body.classList.remove('nodoc');$('#title').textContent=name;$('#pTot').textContent=n;$('#pNum').max=n;
-    $('#sres').innerHTML='';$('#sq').value='';S.cur=1;build();S.zoom=1;fit(CFG.fit);btns();setTool('select');setMode('v');bmUpdate();
+    $('#sres').innerHTML='';$('#sq').value='';S.cur=1;build();S.zoom=1;fit(CFG.fit);btns();setTool('select');setMode('v');bmUpdate();document.body.classList.remove('barhide');
     const sp=POS[S.id];if(sp>1&&S.els[sp-1])V.scrollTop=S.els[sp-1].offsetTop-12;
     const th=await thumb(pdf).catch(()=>'');
     DB.put('files',{id:S.id,name,size:S.size,pages:n,date:Date.now(),thumb:th,blob:new Blob([buf],{type:'application/pdf'})}).catch(()=>{});
@@ -62,11 +62,11 @@ async function drawOnce(i,z){const e=S.els[i];
     const t=document.createElement('canvas');t.width=Math.ceil(vp.width);t.height=Math.ceil(vp.height);
     const task=pg.render({canvasContext:t.getContext('2d'),viewport:vp});e._t=task;await task.promise;e._t=null;
     if(z!==S.zoom||!e._vis){t.width=t.height=0;return}
-    const c=e.querySelector('.pdf');c.width=t.width;c.height=t.height;c.getContext('2d').drawImage(t,0,0);t.width=t.height=0;
+    const c=e.querySelector('.pdf');c.width=t.width;c.height=t.height;c.getContext('2d').drawImage(t,0,0);t.width=t.height=0;e.classList.add('rd');
     const n=e.querySelector('.ink');n.width=c.width;n.height=c.height;ink(i);
     if(!e._tl){e._tl=true;txt(i);await textLayer(pg,e)}
   }catch(err){if(err&&err.name==='RenderingCancelledException')e._again=true;else console.warn(err)}}
-function free(e){e._vis=false;e._z=null;e._tl=false;if(e._t){try{e._t.cancel()}catch(_){}e._t=null}e.querySelectorAll('canvas').forEach(c=>{c.width=0;c.height=0});e.querySelector('.tl').innerHTML='';e.querySelector('.txl').innerHTML=''}
+function free(e){e.classList.remove('rd');e._vis=false;e._z=null;e._tl=false;if(e._t){try{e._t.cancel()}catch(_){}e._t=null}e.querySelectorAll('canvas').forEach(c=>{c.width=0;c.height=0});e.querySelector('.tl').innerHTML='';e.querySelector('.txl').innerHTML=''}
 function vis(){const t=V.scrollTop-800,b=V.scrollTop+V.clientHeight+800;
   S.els.forEach((e,i)=>{const on=e.offsetTop+e.offsetHeight>t&&e.offsetTop<b;e._vis=on;if(on){if(e._z!==S.zoom)draw(i)}else if(e.querySelector('.pdf').width>0)free(e)})}
 let raf;V.addEventListener('scroll',()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{if(!S.pdf)return;vis();const m=V.scrollTop+V.clientHeight/3;let c=0;S.els.forEach((e,i)=>{if(e.offsetTop<=m)c=i});if(S.cur!==c+1){S.cur=c+1;POS[S.id]=S.cur;clearTimeout(window._pt);window._pt=setTimeout(()=>localStorage.setItem('ps-pos',JSON.stringify(POS)),800);$('#pNum').value=S.cur;bmUpdate();$$('.th').forEach((t,i)=>t.classList.toggle('on',i===c))}})},{passive:true});
@@ -126,7 +126,7 @@ V.addEventListener('click',e=>{const pg=e.target.closest('.page');if(!pg||e.targ
   if(S.tool==='text'||S.tool==='note'){const t={x,y,s:S.tool==='note'?14:S.w.tx,c:S.tool==='note'?'#1d1b20':S.col.tx,t:'',f:S.tf.f,b:S.tf.b,i:S.tf.i,bg:S.tool==='note'?'':S.tf.bg};if(S.tool==='note')t.k='n';
     A(i).t.push(t);const d=tbEl(i,t);pg.querySelector('.tl').append(d);d.querySelector('.c').focus()}
   else if(PLACE.includes(S.tool)&&S.pend){const p=S.pend,w=p.tw,h=w*p.h/p.w,g={x:x-w/2,y:y-h/2,w,h,d:p.d};A(i).g.push(g);pg.querySelector('.tl').append(gEl(i,g));commit()}
-  else if(S.tool==='select')$$('.gx.sel').forEach(el=>el.classList.remove('sel'))});
+  else if(S.tool==='select'){$$('.gx.sel').forEach(el=>el.classList.remove('sel'));strokeMenu(e,i,x,y,k)}});
 function txt(i){const l=S.els[i].querySelector('.tl');l.innerHTML='';A(i).t.forEach(t=>l.append(tbEl(i,t)));A(i).g.forEach(g=>l.append(gEl(i,g)))}
 const pos=(d,t)=>{d.style.left=t.x+'px';d.style.top=t.y+'px';d.style.fontSize=t.s+'px';d.style.color=t.c};
 const FONTS={g:'-apple-system,"Hiragino Sans",sans-serif',m:'"Hiragino Mincho ProN","Yu Mincho",serif',r:'"Hiragino Maru Gothic ProN","Hannotate SC",sans-serif',c:'ui-monospace,Menlo,monospace'};
@@ -201,9 +201,10 @@ function paintRecent(){const box=$('#recent');let l=RC.slice();
   if(hv==='search')l=rcQ?l.filter(f=>f.name.toLowerCase().includes(rcQ)):[];else if(htab==='star')l=l.filter(f=>f.star);
   l.sort(hv==='files'&&rcSort==='name'?(a,b)=>a.name.localeCompare(b.name,'ja'):hv==='files'&&rcSort==='size'?(a,b)=>b.size-a.size:(a,b)=>b.date-a.date);
   if(hv==='home')l=l.slice(0,10);
-  box.innerHTML='';
+  box.innerHTML='';box.classList.toggle('gridv',hv==='files'&&!!CFG.grid);
   if(!l.length){const msg=hv==='search'?(rcQ?'見つかりませんでした':'ファイル名を入力して検索します'):htab==='star'?'スターを付けたファイルがここに並びます':'まだファイルがありません。<br>右下の＋からPDFを開くと、ここに並びます。';
     box.innerHTML=`<div class="es"><i data-i="pages"></i><p>${msg}</p></div>`;icons(box);return}
+  if(hv==='home'&&htab==='recent'){box.append(mkHero(l[0]));l=l.slice(1)}
   l.forEach(f=>box.append(mkRow(f)))}
 $('#hq').oninput=e=>{rcQ=e.target.value.toLowerCase();paintRecent()};
 $('#hch').onclick=e=>{const b=e.target.closest('button');if(!b)return;rcSort=b.dataset.s;$$('#hch button').forEach(x=>x.classList.toggle('on',x===b));paintRecent()};
@@ -323,13 +324,13 @@ function renderSet(){const d=$('#set'),st=d.scrollTop;
   <section class="ds st"><h3>表示</h3><p class="li">ファイルを開いたときの表示</p>${sg('fit',[['w','幅に合わせる'],['p','ページ全体'],['z','100%']])}<p class="li">ページの間隔</p>${sg('gap',[[6,'狭い'],[14,'標準'],[30,'広い']])}<p class="li">ページ表示</p>${sg('view',[['c','連続スクロール'],['d','見開き（2ページ）']])}</section>
   <section class="ds st"><h3>ペン</h3><label class="row"><span style="min-width:96px">筆圧の強さ</span><input id="sens" type="range" min="0" max="150" value="${Math.round(CFG.sens*100)}"><output id="sensV">${Math.round(CFG.sens*100)}%</output></label>
     <label class="row"><span style="min-width:96px">指でも描く</span><input id="cfinger" type="checkbox" class="switch" ${CFG.finger?'checked':''}></label><p class="li">筆圧0%で一定の太さ、100%が標準、150%で強弱が大きくなります。</p></section>
-  <section class="ds st"><h3>操作</h3><p class="li">ページを1枚ずつ止めながらスクロール</p>${sg('snap',[[1,'オン'],[0,'オフ']])}<p class="li">画面の左右端をタップしてページ送り</p>${sg('edge',[[1,'オン'],[0,'オフ']])}<p class="li">自動スクロールの速さ</p>${sg('asp',[[1,'ゆっくり'],[3,'標準'],[6,'はやい'],[10,'最速']])}</section>
-  <section class="ds st"><h3>データ</h3><p class="li" id="stor">使用量を計算中…</p><nav class="btns"><button class="tonal" id="clrRecent">最近のファイルを削除</button><button class="tonal" id="clrAnn">書き込みを全て削除</button></nav></section>
+  <section class="ds st"><h3>操作</h3><p class="li">ページを1枚ずつ止めながらスクロール</p>${sg('snap',[[1,'オン'],[0,'オフ']])}<p class="li">画面の左右端をタップしてページ送り</p>${sg('edge',[[1,'オン'],[0,'オフ']])}<p class="li">自動スクロールの速さ</p>${sg('asp',[[1,'ゆっくり'],[3,'標準'],[6,'はやい'],[10,'最速']])}<p class="li">スクロール中に上部バーを隠す</p>${sg('autohide',[[1,'オン'],[0,'オフ']])}<p class="li">起動時に前回のファイルを開く</p>${sg('resume',[[1,'オン'],[0,'オフ']])}</section>
+  <section class="ds st"><h3>データ</h3><p class="li" id="stor">使用量を計算中…</p><nav class="btns"><button class="tonal" id="clrRecent">最近のファイルを削除</button><button class="tonal" id="clrAnn">書き込みを全て削除</button><button class="tonal" id="bkUp">書き込みをバックアップ</button><button class="tonal" id="bkDn">バックアップから復元</button></nav></section>
   <section class="ds st"><h3>アプリについて</h3><p class="li">PDF Studio ・ pdf.js ${pdfjsLib.version}</p></section>`;
   icons(d);d.querySelectorAll('input[type=range]').forEach(sv);d.scrollTop=st}
 $('#set').addEventListener('click',e=>{const t=e.target,d=$('#set');
   if(t===d||t.closest('#sx')){d.close();return}
-  const sb=t.closest('.seg button');if(sb){const k=sb.parentNode.dataset.k,v=sb.dataset.v;CFG[k]=isNaN(+v)?v:+v;saveCfg();if(k==='mode')applyTheme();if(k==='gap')P.style.gap=CFG.gap+'px';if(k==='view'){applyView();if(S.pdf)fit(CFG.fit)}if(k==='snap')document.body.classList.toggle('snap',!!CFG.snap);renderSet();return}
+  const sb=t.closest('.seg button');if(sb){const k=sb.parentNode.dataset.k,v=sb.dataset.v;CFG[k]=isNaN(+v)?v:+v;saveCfg();if(k==='mode')applyTheme();if(k==='gap')P.style.gap=CFG.gap+'px';if(k==='view'){applyView();if(S.pdf)fit(CFG.fit)}if(k==='snap')document.body.classList.toggle('snap',!!CFG.snap);if(k==='autohide'&&!CFG.autohide)document.body.classList.remove('barhide');renderSet();return}
   const sd=t.closest('#seeds button[data-c]');if(sd){CFG.seed=sd.dataset.c;saveCfg();applyTheme();renderSet();return}
   if(t.id==='clrRecent'&&confirm('最近のファイルをすべて削除しますか？（書き込みは残ります）'))DB.all('files').then(l=>Promise.all(l.map(f=>DB.del('files',f.id)))).then(()=>{recent();toast('削除しました')});
   if(t.id==='clrAnn'&&confirm('すべての書き込みを削除しますか？'))DB.all('annots').then(l=>Promise.all(l.map(f=>DB.del('annots',f.id)))).then(()=>toast('削除しました'))});
@@ -533,7 +534,7 @@ const TOOLS=[
  ['書き出しと最適化',[['compress','PDFを圧縮','ページを画像化してサイズを小さく',1,compressPdf],['image','画像として書き出し','表示中のページをPNGで保存',1,exportImage],['article','テキストとして書き出し','文字を抽出して.txtで保存',1,exportText]]],
  ['作成',[['add_photo_alternate','画像からPDF','写真や画像をPDFに変換',0,()=>$('#fileImg').click()],['photo_camera','カメラでスキャン','撮影してPDFにする',0,()=>$('#fileCam').click()],['edit_note','ノートを作成','白紙・罫線・方眼・ドットから選ぶ',0,newNote]]],
  ['文書',[['info','詳細情報','プロパティとメタデータ',1,()=>$('#bInfo').click()],['edit_document','詳細情報を編集','タイトル・作成者などを変更',1,editMeta],['lock','パスワード保護','このアプリでは未対応です',-1,null]]]];
-function openTools(){const g=$('#tgrid');g.innerHTML='';
+function openTools(){const g=$('#tgrid');g.innerHTML='';$('#tq').value='';
   TOOLS.forEach(([h,items])=>{const hh=document.createElement('h2');hh.textContent=h;const gr=document.createElement('div');gr.className='tg';
     items.forEach(([ic,t,d,req,f],n)=>{const dis=req===-1,b=document.createElement('button');b.className='tcd v'+(n%3)+(dis?' dis':'');
       b.innerHTML=`<span class="tci"><i data-i="${ic}"></i></span><b></b><small></small>`;b.querySelector('b').textContent=t;b.querySelector('small').textContent=d;
@@ -545,7 +546,7 @@ $('#tClose').onclick=()=>{$('#tools').classList.remove('open');navSel(hv)};
 
 /* ================= Acrobat-style app shell ================= */
 /* popover menu */
-function closePop(){document.querySelectorAll('.pop').forEach(x=>x.remove())}
+function closePop(){document.querySelectorAll('.pop').forEach(x=>x.remove());if(S.sel){const i=S.sel.i;S.sel=null;ink(i)}}
 function popMenu(a,items,side){closePop();const p=document.createElement('div');p.className='pop';
   items.forEach(it=>{if(it==='-'){p.append(document.createElement('hr'));return}const b=document.createElement('button');b.innerHTML=`<i data-i="${it[0]}"></i><span></span>`;b.querySelector('span').textContent=it[1];b.onclick=e=>{e.stopPropagation();closePop();it[2]()};p.append(b)});
   icons(p);document.body.append(p);const r=a.getBoundingClientRect();
@@ -568,7 +569,7 @@ $('#mView').onclick=()=>{const v=$('#mVw');v.hidden=!v.hidden;$('#mView .chev').
 $('#fW').onclick=()=>fitW();$('#fP').onclick=()=>fitP();
 $('#vC').onclick=()=>{CFG.view='c';saveCfg();applyView();fit(CFG.fit)};$('#vD').onclick=()=>{CFG.view='d';saveCfg();applyView();fit(CFG.fit)};
 $('#mStar').onclick=async()=>{const s=await starToggle(S.id);$('#mStar').classList.toggle('on',s);toast(s?'スターを付けました':'スターを外しました')};
-function fillMore(){$('#mName').textContent=S.name;const i=(S.meta&&S.meta.info)||{},d=i.ModDate||i.CreationDate;$('#mMeta').textContent='PDF ・ '+(d?pd(d).split(' ')[0]:fmtSize(S.size));DB.get('files',S.id).then(f=>$('#mStar').classList.toggle('on',!!(f&&f.star))).catch(()=>{})}
+function fillMore(){recent().then(fillRec);$('#mName').textContent=S.name;const i=(S.meta&&S.meta.info)||{},d=i.ModDate||i.CreationDate;$('#mMeta').textContent='PDF ・ '+(d?pd(d).split(' ')[0]:fmtSize(S.size));DB.get('files',S.id).then(f=>$('#mStar').classList.toggle('on',!!(f&&f.star))).catch(()=>{})}
 async function printPdf(){if(!S.pdf)return;busy('印刷用PDFを準備中…');
   try{const doc=await PDFLib.PDFDocument.load(S.bytes,{ignoreEncryption:true});await bake(doc,S.ann,S.sizes);const u=await doc.save();idle();
     const url=URL.createObjectURL(new Blob([u],{type:'application/pdf'})),w=window.open(url,'_blank');if(!w)location.href=url;toast('開いたPDFの共有ボタンから印刷できます')}
@@ -617,6 +618,8 @@ function propsHTML(kd){
   const fing=`<label class="row"><span>指でも描く</span><input id="fsw" type="checkbox" class="switch" ${CFG.finger?'checked':''}></label>`;
   const fav=`<div class="favr"><span>お気に入り</span>${FAV.map((f,n)=>`<button class="fav${f?'':' empty'}" data-fav="${n}">${f?`<i style="background:${f.c}"></i>${f.w}`:'＋'}</button>`).join('')}<button class="chip2${favSave?' on':''}" data-act="favsave">${favSave?'保存先を選択':'保存'}</button></div>`;
   const dash=G('pd',[['s','実線'],['d','破線'],['t','点線']],S.ps.d);
+  if(S.compact&&['pen','hl','shape','tx'].includes(kd)){const cw=kd==='hl'?[10,18,28,40]:kd==='tx'?[12,16,20,28,40]:[.5,1,2,3,6,10],cv=kd==='hl'?S.w.hl:kd==='tx'?(S.tb?S.tb.t.s:S.w.tx):S.w.pen;
+    return`<div class="cmprow">${col.replace('class="sw"','class="sw cs"')}<span class="vs"></span><nav class="chips2 cw">${cw.map(w=>`<button data-w="${w}" class="${cv==w?'on':''}">${w}</button>`).join('')}</nav><button class="chip2" data-act="expand">詳細</button></div>`}
   if(kd==='pen')return`<canvas id="pv" width="360" height="72"></canvas><nav class="chips2">${[1,2,3,6,10].map(w=>`<button data-w="${w}" class="${S.w.pen==w?'on':''}">${w}</button>`).join('')}</nav>`+G('py',[['b','ボール'],['f','万年筆'],['r','筆'],['p','鉛筆']],S.ps.y)+R('pw','太さ',.5,30,.5,S.w.pen)+R('po','不透明度',10,100,5,S.o.pen)+(S.ps.y!=='b'?R('ps','筆圧の強さ',0,200,10,S.ps.sens)+G('pc',[['s','やわらかい'],['n','標準'],['h','かため']],S.ps.curve):'')+R('pm','手ぶれ補正',0,10,1,S.ps.sm)+dash+col+fav+fing;
   if(kd==='hl')return`<canvas id="pv" width="360" height="72"></canvas>`+R('hw','太さ',6,48,1,S.w.hl)+R('ho','不透明度',10,80,5,S.o.hl)+col+fav+fing;
   if(kd==='shape')return G('sk',SHAPES,S.shape,'chips2')+R('pw','線の太さ',.5,30,.5,S.w.pen)+R('po','不透明度',10,100,5,S.o.pen)+dash+R('sf','塗りつぶし',0,100,5,S.fill)+col+fing;
@@ -627,7 +630,7 @@ function propsHTML(kd){
   return col}
 function syncProps(){const pr=$('#props'),kd=pk();
   if(S.tb)pr.classList.remove('off');else if(S.tool==='select'||S.tool==='note'||PLACE.includes(S.tool)||!kd){pr.classList.add('off');return}
-  const st=pr.scrollTop;pr.innerHTML=propsHTML(kd);pr.querySelectorAll('input[type=range]').forEach(sv);pr.scrollTop=st;pvDraw()}
+  const st=pr.scrollTop;let hh=propsHTML(kd);if(!S.compact&&['pen','hl','shape','tx'].includes(kd))hh='<nav class="chips2"><button data-act="collapse">コンパクト表示にする</button></nav>'+hh;pr.innerHTML=hh;pr.classList.toggle('cmpk',hh.startsWith('<div class="cmprow">'));pr.querySelectorAll('input[type=range]').forEach(sv);pr.scrollTop=st;pvDraw()}
 function pvDraw(){const c=$('#pv');if(!c)return;const x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
   const p=[];for(let i=0;i<=60;i++){const t=i/60;p.push([22+t*316,36+Math.sin(t*6.28)*14,Math.min(1,.12+Math.sin(t*3.14)*.9)])}
   stroke(x,S.tool==='hl'?{t:'h',c:S.col.hl,w:S.w.hl,o:S.o.hl/100,p}:{t:'p',c:S.col.pen,w:S.w.pen,o:S.o.pen/100,y:S.ps.y,sn:S.ps.sens/100,d:S.ps.d,p},1)}
@@ -639,13 +642,13 @@ const PR=$('#props');
 PR.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const g=b.parentNode.dataset&&b.parentNode.dataset.g,v=b.dataset.v;
   if(g){if(g==='py')S.ps.y=v;else if(g==='pc')S.ps.curve=v;else if(g==='pd')S.ps.d=v;else if(g==='sk')S.shape=v;else if(g==='tf'){if(S.tb){S.tb.t.f=v;tbStyle(S.tb.d,S.tb.t);commit()}else S.tf.f=v}syncProps();return}
   if(b.dataset.c){setColor(b.dataset.c,true);return}
-  if(b.dataset.w){S.w.pen=+b.dataset.w;syncProps();return}
+  if(b.dataset.w){const w=+b.dataset.w,kd=pk();if(kd==='hl')S.w.hl=w;else if(kd==='tx'){if(S.tb){S.tb.t.s=w;pos(S.tb.d,S.tb.t);save()}else S.w.tx=w}else S.w.pen=w;syncProps();return}
   if(b.dataset.bg!==undefined){const bg=b.dataset.bg;if(S.tb){S.tb.t.bg=bg;tbStyle(S.tb.d,S.tb.t);commit()}else S.tf.bg=bg;syncProps();return}
   if(b.dataset.fav!==undefined){const n=+b.dataset.fav;if(favSave||!FAV[n]){FAV[n]=favState();favSave=false;localStorage.setItem('ps-fav',JSON.stringify(FAV));toast('お気に入りに保存しました')}else{loadFav(FAV[n]);setTool(S.tool)}syncProps();return}
   const a=b.dataset.act;
   if(a==='favsave'){favSave=!favSave;syncProps()}
   else if(a==='tb'||a==='ti'){const k=a==='tb'?'b':'i';if(S.tb){S.tb.t[k]=S.tb.t[k]?0:1;tbStyle(S.tb.d,S.tb.t);commit()}else S.tf[k]=S.tf[k]?0:1;syncProps()}
-  else if(a==='clrpage'){if(confirm('このページの書き込みをすべて消去しますか？')){const i=S.cur-1;S.ann[i]={s:[],t:[],g:[]};ink(i);txt(i);commit()}}});
+  else if(a==='expand'){S.compact=false;syncProps()}else if(a==='collapse'){S.compact=true;syncProps()}else if(a==='clrpage'){if(confirm('このページの書き込みをすべて消去しますか？')){const i=S.cur-1;S.ann[i]={s:[],t:[],g:[]};ink(i);txt(i);commit()}}});
 PR.addEventListener('input',e=>{const t=e.target,v=+t.value,id=t.id;
   if(id==='cc'){const kd=pk();if(kd==='tx'&&S.tb){S.tb.t.c=t.value;S.tb.d.style.color=t.value}else S.col[ck(kd)]=t.value;pvDraw();return}
   if(id==='fsw'){CFG.finger=t.checked;saveCfg();$('#finger').checked=t.checked;document.body.classList.toggle('finger',t.checked);return}
@@ -655,7 +658,7 @@ PR.addEventListener('change',e=>{if(e.target.id==='cc')setColor(e.target.value,t
 
 /* bookmarks / page tone */
 const BM=JSON.parse(localStorage.getItem('ps-bm')||'{}'),bmSave=()=>localStorage.setItem('ps-bm',JSON.stringify(BM));
-function bmUpdate(){const b=$('#bBm');if(b)b.classList.toggle('on',(BM[S.id]||[]).includes(S.cur))}
+function bmUpdate(){pslUpdate();const b=$('#bBm');if(b)b.classList.toggle('on',(BM[S.id]||[]).includes(S.cur))}
 function renderBm(){const b=$('#bml'),l=BM[S.id]||[];b.innerHTML=l.length?'<h4 class="oh">マイしおり</h4>':'';l.forEach(p=>{const x=document.createElement('button');x.className='ol';x.textContent=p+'ページ';x.onclick=()=>go(p);b.append(x)})}
 $('#bBm').onclick=()=>{if(!S.pdf)return;const l=BM[S.id]||(BM[S.id]=[]),i=l.indexOf(S.cur);if(i>=0)l.splice(i,1);else l.push(S.cur);l.sort((a,b)=>a-b);bmSave();bmUpdate();renderBm();toast(i>=0?'しおりを外しました':S.cur+'ページにしおりを付けました')};
 function setTone(t){CFG.tone=t;saveCfg();document.body.classList.toggle('inv',t==='i');document.body.dataset.tone=t;$$('[data-tn]').forEach(b=>b.classList.toggle('on',b.dataset.tn===t));$('#bInv').classList.toggle('on',t==='i')}
@@ -733,3 +736,68 @@ async function exportComments(){if(!need())return;busy('コメントを集計中
     idle();if(!n){toast('書き出せるコメントがありません');return}
     await deliver(new TextEncoder().encode(out),S.name.replace(/\.pdf$/i,'')+'-コメント.txt','text/plain')}
   catch(e){idle();console.error(e);toast('書き出せませんでした')}}
+
+/* ================= v9: reading UI + object editing ================= */
+Object.assign(S,{compact:true,sel:null});
+/* auto-hide bar, reading progress, page scrubber */
+let lt=0,pslT,pslDrag=false;
+V.addEventListener('scroll',()=>{if(document.body.classList.contains('nodoc')||!S.pdf)return;const t=V.scrollTop,d=t-lt,mx=V.scrollHeight-V.clientHeight;
+  $('#rpf').style.width=(mx>0?t/mx*100:0)+'%';
+  if(Math.abs(d)>=8){lt=t;if(CFG.autohide)document.body.classList.toggle('barhide',d>0&&t>120)}
+  if(S.sizes.length>1){const p=$('#psl');p.classList.add('on');clearTimeout(pslT);pslT=setTimeout(()=>{if(!pslDrag)p.classList.remove('on')},2200)}},{passive:true});
+addEventListener('pointerdown',e=>{if(e.clientY<64&&document.body.classList.contains('barhide'))document.body.classList.remove('barhide')},true);
+function pslUpdate(){const r=$('#pslR');if(!r)return;r.max=S.sizes.length||1;r.value=S.cur;$('#pslL').textContent=`${S.cur} / ${S.sizes.length}`;sv(r)}
+$('#pslR').addEventListener('pointerdown',()=>pslDrag=true);
+['pointerup','pointercancel'].forEach(n=>$('#pslR').addEventListener(n,()=>{pslDrag=false;clearTimeout(pslT);pslT=setTimeout(()=>$('#psl').classList.remove('on'),1500)}));
+$('#pslR').addEventListener('input',e=>{const n=+e.target.value,el=S.els[n-1];if(el)V.scrollTop=el.offsetTop-12;$('#pslL').textContent=`${n} / ${S.sizes.length}`;sv(e.target)});
+/* tap a stroke with the select tool: delete / duplicate / recolor / thickness */
+function sbox(s){if(s.t==='m'){let a=1e9,b=1e9,c=-1e9,d=-1e9;s.r.forEach(r=>{a=Math.min(a,r[0]);b=Math.min(b,r[1]);c=Math.max(c,r[0]+r[2]);d=Math.max(d,r[1]+r[3])});return[a,b,c,d]}return bbox(s.p,(s.w||4)/2+2)}
+function drawSel(i,s){const c=S.els[i].querySelector('.ink');if(!c.width)return;const x=c.getContext('2d'),k=c.width/S.sizes[i].w,b=sbox(s);
+  x.save();x.setLineDash([8,5]);x.lineWidth=2.5;x.strokeStyle=(getComputedStyle(document.documentElement).getPropertyValue('--pr')||'#6750a4').trim();x.strokeRect(b[0]*k,b[1]*k,(b[2]-b[0])*k,(b[3]-b[1])*k);x.restore()}
+function strokeMenu(e,i,x,y,k){const sel=getSelection();if(sel&&!sel.isCollapsed)return;const thr=14/k;let best=null,bd=1e9;
+  A(i).s.forEach(s=>{const pts=spts(s);if(!pts||!pts.length)return;let d=1e9;for(let n=0;n<pts.length;n++){const dd=Math.hypot(pts[n][0]-x,pts[n][1]-y);if(dd<d)d=dd}d-=(s.w||0)/2;if(d<thr&&d<bd){bd=d;best=s}});
+  if(!best)return;const s=best,isM=s.t==='m',anchor={getBoundingClientRect:()=>({left:e.clientX,right:e.clientX,top:e.clientY,bottom:e.clientY,width:0,height:0})},done=()=>{commit();ink(i)};
+  popMenu(anchor,[['delete','削除',()=>{A(i).s=A(i).s.filter(q=>q!==s);done()}],
+    ['content_copy','複製',()=>{const n=JSON.parse(JSON.stringify(s));if(n.r)n.r.forEach(r=>{r[0]+=12;r[1]+=12});else n.p.forEach(q=>{q[0]+=12;q[1]+=12});A(i).s.push(n);done()}],
+    ['palette','色を現在の色に変更',()=>{s.c=isM?S.col[s.k]:(s.t==='h'?S.col.hl:S.col.pen);done()}],
+    ...(isM?[]:[['add','太くする',()=>{s.w=Math.min(60,s.w*1.3);done()}],['remove','細くする',()=>{s.w=Math.max(.5,s.w/1.3);done()}]])]);
+  S.sel={i,s};drawSel(i,s)}
+/* home: hero card */
+function mkHero(f){const pos=Math.min(f.pages,POS[f.id]||1),h=document.createElement('div');h.className='hero2';
+  h.innerHTML=`<div class="h2t">${f.thumb?`<img alt="" src="${f.thumb}">`:''}</div><div class="h2b"><small>続きから読む</small><b></b><span>${pos} / ${f.pages}ページ ・ ${rel(f.date)}</span><div class="prog"><span style="width:${Math.round(pos/f.pages*100)}%"></span></div><button class="fabx">開く</button></div>`;
+  h.querySelector('b').textContent=f.name;h.onclick=async()=>{try{await load(await f.blob.arrayBuffer(),f.name)}catch(_){toast('開けませんでした')}};return h}
+$('#gtog').onclick=()=>{CFG.grid=CFG.grid?0:1;saveCfg();paintRecent()};
+/* tools search, zoom presets, recent switcher */
+$('#tq').oninput=e=>{const q=e.target.value.trim().toLowerCase();$$('#tgrid .tcd').forEach(c=>c.style.display=c.textContent.toLowerCase().includes(q)?'':'none');
+  $$('#tgrid .tg').forEach(g=>{const any=[...g.children].some(c=>c.style.display!=='none');g.style.display=any?'':'none';g.previousElementSibling.style.display=any?'':'none'})};
+$$('[data-zp]').forEach(b=>b.onclick=()=>zoom(+b.dataset.zp));
+function fillRec(){const rec=$('#mRec');rec.innerHTML='';
+  RC.filter(f=>f.id!==S.id).sort((a,b)=>b.date-a.date).slice(0,4).forEach(f=>{const b=document.createElement('button');b.innerHTML='<i data-i="description"></i><span></span>';b.querySelector('span').textContent=f.name;
+    b.onclick=async()=>{try{await load(await f.blob.arrayBuffer(),f.name)}catch(_){toast('開けませんでした')}};rec.append(b)});
+  if(!rec.childElementCount)rec.innerHTML='<p class="empty">ほかのファイルはありません</p>';icons(rec)}
+/* backup / restore of annotations */
+async function backup(){busy('バックアップ中…');try{const an=await DB.all('annots'),data={v:1,annots:an,bm:BM,pos:POS};idle();await deliver(new TextEncoder().encode(JSON.stringify(data)),'pdfstudio-backup.json','application/json')}catch(e){idle();toast('バックアップできませんでした')}}
+$('#set').addEventListener('click',e=>{const id=e.target.id;if(id==='bkUp')backup();if(id==='bkDn')$('#fileB').click()});
+$('#fileB').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const d=JSON.parse(await f.text());if(!d||d.v!==1)throw 0;for(const a of d.annots||[])await DB.put('annots',a);Object.assign(BM,d.bm||{});bmSave();Object.assign(POS,d.pos||{});localStorage.setItem('ps-pos',JSON.stringify(POS));
+    toast(`${(d.annots||[]).length}件の書き込みを復元しました。同じPDFを開くと反映されます`)}catch(_){toast('復元できませんでした')}};
+/* guide + keyboard shortcuts */
+const GUIDE=[['edit','描く','左の列のペンを選び、Apple Pencilで書きます。色と太さは画面下のバーで変えられ、「詳細」でさらに細かく設定できます。'],
+ ['format_ink_highlighter','文字をハイライト','ハイライト・下線・取り消し線を選んでから、文字をなぞって選択すると自動で付きます。'],
+ ['arrow_selector_tool','書き込みを編集','選択ツールで線をタップすると、削除・複製・色や太さの変更ができます。消しゴムでもなぞって消せます。'],
+ ['signature','署名と入力','左の列の一番下から、署名・イニシャル・チェック・日付・スタンプを選び、置きたい場所をタップします。'],
+ ['pinch','拡大縮小とページ移動','2本指のピンチで拡大縮小。スクロールすると上にページ用のスライダーが出て、すばやく移動できます。'],
+ ['dashboard_customize','ページ編集とツール','「編集」メニューやツール一覧から、整理・結合・分割・圧縮・透かし・ページ番号などが使えます。'],
+ ['keyboard','キーボード','V 選択 / P ペン / H ハイライト / E 消しゴム / T テキスト / N 付箋 / S 図形 / [ ] ペンの太さ / Cmd+F 検索 / Cmd+S 保存 / Cmd+Z 元に戻す']];
+function showGuide(){const d=$('#guide');
+  d.innerHTML=`<div class="dh"><span>使い方ガイド</span><button class="ib" id="gdx" aria-label="閉じる"><i data-i="close"></i></button></div><div class="gl">${GUIDE.map(([i,t,s])=>`<div class="gi"><span class="gic"><i data-i="${i}"></i></span><div><b>${t}</b><p>${s}</p></div></div>`).join('')}</div>`;
+  icons(d);$('#gdx').onclick=()=>d.close();d.onclick=e=>{if(e.target===d)d.close()};d.onclose=()=>localStorage.setItem('ps-guide','1');d.showModal()}
+$('#bGuide').onclick=showGuide;
+if(!localStorage.getItem('ps-guide'))setTimeout(showGuide,800);
+addEventListener('keydown',e=>{if(!S.pdf||e.target.isContentEditable||/INPUT|TEXTAREA/.test(e.target.tagName)||document.querySelector('dialog[open]'))return;const m=e.metaKey||e.ctrlKey;
+  if(m&&e.key==='f'){e.preventDefault();$('#bSearch').click();return}if(m&&e.key==='s'){e.preventDefault();exportPdf(true);return}if(m&&e.key==='p'){e.preventDefault();printPdf();return}if(m)return;
+  const T={v:'select',h:'hlt',u:'ult',k:'stt',n:'note',p:'pen',m:'hl',s:'shape',t:'text',e:'er'}[e.key];if(T){setTool(T);return}
+  if(e.key==='['||e.key===']'){S.w.pen=Math.max(.5,Math.min(30,S.w.pen+(e.key===']'?1:-1)));toast('ペンの太さ '+S.w.pen);if(!$('#props').classList.contains('off'))syncProps()}
+  if(e.key==='?')showGuide()});
+/* resume last file on launch */
+if(CFG.resume)recent().then(()=>{const f=RC.slice().sort((a,b)=>b.date-a.date)[0];if(f)f.blob.arrayBuffer().then(b=>load(b,f.name)).catch(()=>{})});
