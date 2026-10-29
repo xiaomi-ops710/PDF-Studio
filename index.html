@@ -119,6 +119,8 @@
 </nav>
 <div id="psl"><input id="pslR" type="range" min="1" max="1" value="1" aria-label="ページ"><span id="pslL">1 / 1</span></div>
 <div id="nav">
+  <button class="ib" id="jb" aria-label="ジャンプ履歴を戻る" disabled><i data-i="arrow_back"></i></button>
+  <button class="ib" id="jf" aria-label="ジャンプ履歴を進む" disabled><i data-i="arrow_forward"></i></button>
   <button class="ib" id="pPrev" aria-label="前のページ"><i data-i="up2"></i></button>
   <button class="ib" id="pNext" aria-label="次のページ"><i data-i="dn2"></i></button>
   <input id="pNum" type="number" inputmode="numeric" min="1" value="1"><span id="pTot">1</span>
@@ -127,6 +129,30 @@
 <div id="props" class="off"></div>
 <input type="checkbox" id="finger" hidden>
 
+<div id="mk" class="b">
+  <div class="mkh" id="mkh" aria-label="ツールバーを移動"></div>
+  <div class="mkg">
+    <button class="mkb" id="mkSel" aria-label="選択・スクロール"><i data-i="cur"></i></button>
+    <button class="mkb" id="mkUndo" aria-label="元に戻す"><i data-i="undo"></i></button>
+    <button class="mkb" id="mkRedo" aria-label="やり直す"><i data-i="redo"></i></button>
+  </div>
+  <div class="mkt" id="mkTips">
+    <button class="tk" data-k="pen" aria-label="ペン"><span class="ico"><i data-i="pen"></i></span></button>
+    <button class="tk" data-k="fine" aria-label="ボールペン"><span class="ico"><i data-i="stylus_note"></i></span></button>
+    <button class="tk" data-k="hl" aria-label="蛍光ペン"><span class="ico"><i data-i="hl"></i></span></button>
+    <button class="tk" data-k="er" aria-label="消しゴム"><span class="ico"><i data-i="er"></i></span></button>
+    <button class="tk" data-k="pencil" aria-label="鉛筆"><span class="ico"><i data-i="draw"></i></span></button>
+    <button class="tk" data-k="ruler" aria-label="定規"><span class="ico"><i data-i="straighten"></i></span></button>
+  </div>
+  <div class="mkc" id="mkCols"></div>
+  <div class="mkg">
+    <button class="mkb" id="mkLasso" aria-label="投げ縄で選択"><i data-i="lasso_select"></i></button>
+    <button class="mkb" id="mkAdd" aria-label="追加"><i data-i="plus"></i></button>
+    <button class="mkb" id="mkMore" aria-label="その他"><i data-i="more_horiz"></i></button>
+  </div>
+</div>
+<button id="mkMin" class="mkb" hidden aria-label="ツールバーを開く"><i data-i="edit"></i></button>
+<div id="rul"><div class="rbody"></div><button class="rg rmove" aria-label="定規を移動"><i data-i="open_with"></i></button><button class="rg rrot" aria-label="定規を回転"><i data-i="sync"></i></button><button class="rg rx" aria-label="定規を閉じる"><i data-i="close"></i></button></div>
 <nav id="dock">
   <button class="tool on" data-t="select" aria-label="選択"><i data-i="cur"></i></button>
   <button class="tool" data-t="note" aria-label="付箋コメント"><i data-i="note"></i></button>

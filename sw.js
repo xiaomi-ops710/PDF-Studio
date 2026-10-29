@@ -1,4 +1,4 @@
-const V='pdfstudio-v9',C='https://cdnjs.cloudflare.com/ajax/libs/';
+const V='pdfstudio-v10',C='https://cdnjs.cloudflare.com/ajax/libs/';
 const SH=['./','index.html','style.css','app.js','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png'];
 const LIB=[C+'pdf.js/3.11.174/pdf.min.js',C+'pdf.js/3.11.174/pdf.worker.min.js',C+'pdf-lib/1.17.1/pdf-lib.min.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(V).then(c=>Promise.all([c.addAll(SH),...LIB.map(u=>c.add(u).catch(()=>{}))])).then(()=>self.skipWaiting()))});
