@@ -604,3 +604,43 @@ body.mk-b #rdbar{bottom:calc(136px + var(--sab))}body.mk-b #asbar{bottom:calc(19
 body.mk-l:not(.nodoc):not(.imm) #pages{padding-left:132px}
 body.mk-r:not(.nodoc):not(.imm) #pages{padding-right:132px}
 body.mk-r #rtool,body.mk-r #nav{right:96px}
+
+/* ===== v11: motion ===== */
+@keyframes riseT{from{opacity:0;translate:0 18px;scale:.97}}
+@keyframes popS{from{opacity:0;scale:.4}}
+@keyframes tipIn{from{opacity:0;translate:0 70px}}
+@keyframes fadeIn{from{opacity:0}}
+@keyframes sheetUp{from{opacity:0;translate:0 70px}}
+@keyframes rip{from{transform:scale(0);opacity:.2}to{transform:scale(1);opacity:0}}
+.qb,.lr,.hero2,.tcd{animation:riseT .5s var(--spring) backwards;animation-delay:calc(var(--i,0)*40ms)}
+.es,.greet{animation:riseT .6s var(--spring) backwards}.gsub{animation:riseT .6s var(--spring) .07s backwards}
+#bnav{animation:riseT .6s var(--spring) backwards}
+body.nodoc #fab{animation:popS .5s var(--spring) .15s backwards}
+#pages.enter{animation:fadeIn .5s ease-out}
+.page .pdf{opacity:0;transition:opacity .4s ease-out}
+.page.rd .pdf{opacity:1}
+body:not(.nodoc) #mk{animation:riseT .65s var(--spring) .1s backwards}
+body:not(.nodoc) #rtool,body:not(.nodoc) #nav{animation:riseT .6s var(--spring) .2s backwards}
+body:not(.nodoc) #bar .dg>*{animation:riseT .5s var(--spring) backwards;animation-delay:calc(var(--i,0)*30ms + .05s)}
+.tk{animation:tipIn .65s var(--spring) backwards;animation-delay:calc(var(--i,0)*55ms + .25s)}
+.sc{animation:popS .45s var(--spring) backwards;animation-delay:calc(var(--i,0)*45ms + .3s)}
+#rtool>*{animation:popS .45s var(--spring) backwards;animation-delay:calc(var(--i,0)*60ms + .3s)}
+.tb,.gx{animation:popS .35s var(--spring)}
+.lth img,.h2t img{animation:fadeIn .5s ease-out}
+#fabm:not(.off) button{animation:riseT .4s var(--spring) backwards}
+#fabm:not(.off) button:nth-child(1){animation-delay:.04s}#fabm:not(.off) button:nth-child(2){animation-delay:.09s}
+#fabm:not(.off) button:nth-child(3){animation-delay:.14s}#fabm:not(.off) button:nth-child(4){animation-delay:.19s}
+dialog[open]::backdrop{animation:fadeIn .3s ease-out}
+dialog#stamps[open]{animation:sheetUp .45s var(--spring)}
+.pop.on{animation:none}
+.ds{animation:riseT .5s var(--spring) backwards}
+.ds:nth-of-type(2){animation-delay:.05s}.ds:nth-of-type(3){animation-delay:.1s}.ds:nth-of-type(4){animation-delay:.15s}.ds:nth-of-type(5){animation-delay:.2s}
+.ft{font-size:18px;margin:6px 4px 8px}
+.ib,.mkb,.tabb,.bi,.tcd,.lr,.pop button,#more button,.chips button,.seg button,.tonal,.fabx,.chip2,.chips2 button,.htabs button,#fab,#fabm button,.stp,.hero2{overflow:hidden}
+.rip{position:absolute;border-radius:50%;background:currentColor;pointer-events:none;transform:scale(0);animation:rip .6s ease-out forwards;z-index:0}
+body[data-motion=o] *,body[data-motion=o] *::before,body[data-motion=o] *::after{animation:none!important;transition:none!important}
+body[data-motion=o] .page .pdf{opacity:1}
+body[data-motion=s]{--spring:cubic-bezier(.2,0,0,1)}
+body[data-motion=s] .qb,body[data-motion=s] .lr,body[data-motion=s] .tcd,body[data-motion=s] .tk,body[data-motion=s] .sc{animation-delay:0s}
+
+body.nodoc #bar{transform:none!important;opacity:1!important;pointer-events:auto!important}
