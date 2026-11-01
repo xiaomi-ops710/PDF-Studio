@@ -131,6 +131,7 @@
 <input type="checkbox" id="finger" hidden>
 
 <div id="mk" class="b">
+  <button class="mkcpt" id="mkCpt" aria-label="ツールバーを開く"></button>
   <div class="mkh" id="mkh" aria-label="ツールバーを移動（タップで最小化）"></div>
   <button class="mkx" id="mkX" aria-label="ツールバーを最小化"><i data-i="minimize"></i></button>
   <div class="mkg">
@@ -141,6 +142,8 @@
   <div class="mkt" id="mkTips">
     <button class="tk" data-k="pen" aria-label="ペン"><span class="ico"><i data-i="pen"></i></span></button>
     <button class="tk" data-k="fine" aria-label="ボールペン"><span class="ico"><i data-i="stylus_note"></i></span></button>
+    <button class="tk" data-k="marker" aria-label="マーカー"><span class="ico"><i data-i="ink_marker"></i></span></button>
+    <button class="tk" data-k="brush" aria-label="筆"><span class="ico"><i data-i="brush"></i></span></button>
     <button class="tk" data-k="hl" aria-label="蛍光ペン"><span class="ico"><i data-i="hl"></i></span></button>
     <button class="tk" data-k="er" aria-label="消しゴム"><span class="ico"><i data-i="er"></i></span></button>
     <button class="tk" data-k="pencil" aria-label="鉛筆"><span class="ico"><i data-i="draw"></i></span></button>
@@ -153,7 +156,6 @@
     <button class="mkb" id="mkMore" aria-label="その他"><i data-i="more_horiz"></i></button>
   </div>
 </div>
-<button id="mkMin" class="mkb" hidden aria-label="ツールバーを開く"><i data-i="edit"></i><span class="dot"></span></button>
 <div id="rul"><div class="rbody"></div><button class="rg rmove" aria-label="定規を移動"><i data-i="open_with"></i></button><button class="rg rrot" aria-label="定規を回転"><i data-i="sync"></i></button><button class="rg rx" aria-label="定規を閉じる"><i data-i="close"></i></button></div>
 <nav id="dock">
   <button class="tool on" data-t="select" aria-label="選択"><i data-i="cur"></i></button>
@@ -207,6 +209,7 @@
 <dialog id="opt"></dialog>
 <dialog id="metad"></dialog>
 <dialog id="guide"></dialog>
+<canvas id="laser"></canvas>
 <div id="busy"><div class="bx"><div class="ld"></div><div id="busyT"></div><div class="lp" style="width:150px"><i class="lpf" style="width:100%"></i></div></div></div>
 <div id="toast"></div>
 <input type="file" id="file" accept="application/pdf,.pdf,image/*" hidden>
