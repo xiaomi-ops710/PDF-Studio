@@ -11,7 +11,7 @@ i{display:inline-flex;width:24px;height:24px}i svg{width:100%;height:100%}
 body.imm #pages{padding-top:calc(24px + var(--sat))}
 .page{position:relative;flex:none;background:#fff;border-radius:6px;box-shadow:var(--sh)}
 .page canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:6px}
-.ink{mix-blend-mode:multiply}
+.ink{mix-blend-mode:normal}
 body.finger .ink{touch-action:none}
 body.inv .pdf,body.inv .ink{filter:invert(.9) hue-rotate(180deg)}
 body.inv .ink{mix-blend-mode:normal}
@@ -644,3 +644,22 @@ body[data-motion=s]{--spring:cubic-bezier(.2,0,0,1)}
 body[data-motion=s] .qb,body[data-motion=s] .lr,body[data-motion=s] .tcd,body[data-motion=s] .tk,body[data-motion=s] .sc{animation-delay:0s}
 
 body.nodoc #bar{transform:none!important;opacity:1!important;pointer-events:auto!important}
+
+/* ===== v12: toolbar free-float / spring / minimise, no scrubber ===== */
+body:not(.showprog) #rp{display:none!important}
+#peek{position:fixed;top:calc(6px + var(--sat));left:50%;width:84px;height:24px;margin-left:-42px;border-radius:12px;background:var(--sfh);box-shadow:var(--sh);z-index:7;display:none;place-items:center}
+#peek::before{content:"";width:34px;height:4px;border-radius:2px;background:var(--onv)}
+body.barhide:not(.nodoc):not(.imm) #peek{display:grid;animation:popS .4s var(--spring)}
+#mk{touch-action:none;transition:opacity .2s,scale .45s var(--spring),rotate .55s var(--spring)}
+.mkt{touch-action:pan-x}
+#mk.l .mkt,#mk.r .mkt{touch-action:pan-y}
+#mk.drag{scale:1.045;box-shadow:0 22px 46px rgba(0,0,0,.3);transition:scale .3s var(--spring),opacity .2s;cursor:grabbing}
+#mk.f{transform:none}
+.mkx{position:absolute;top:6px;right:16px;width:30px;height:30px;border-radius:15px;display:grid;place-items:center;color:var(--onv);z-index:2;transition:background .2s,transform .3s var(--spring)}
+.mkx:active{background:var(--sfhh);transform:scale(.85)}
+.mkx .ms{font-size:20px}
+#mk.t .mkx{top:auto;bottom:6px}
+#mk.l .mkx,#mk.r .mkx{right:8px}
+#mkMin{touch-action:none;cursor:grab;z-index:6;transition:scale .45s var(--spring),rotate .55s var(--spring)}
+#mkMin.drag{scale:1.15;box-shadow:0 18px 36px rgba(0,0,0,.3)}
+#mkMin .dot{position:absolute;right:7px;bottom:7px;width:15px;height:15px;border-radius:8px;background:var(--cur,#000);border:2.5px solid var(--bg)}

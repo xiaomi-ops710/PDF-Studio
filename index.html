@@ -20,6 +20,7 @@
 
 <main id="viewer"><div id="pages"></div></main>
 <div id="rp"><i id="rpf"></i></div>
+<button id="peek" aria-label="上部バーを表示"></button>
 
 <header id="bar">
   <div class="dg">
@@ -118,7 +119,6 @@
   <button class="ib" id="bBm" aria-label="しおりを追加"><i data-i="bookmark"></i></button>
   <button class="ib" id="bSide" aria-label="ページ一覧"><i data-i="grid"></i></button>
 </nav>
-<div id="psl"><input id="pslR" type="range" min="1" max="1" value="1" aria-label="ページ"><span id="pslL">1 / 1</span></div>
 <div id="nav">
   <button class="ib" id="jb" aria-label="ジャンプ履歴を戻る" disabled><i data-i="arrow_back"></i></button>
   <button class="ib" id="jf" aria-label="ジャンプ履歴を進む" disabled><i data-i="arrow_forward"></i></button>
@@ -131,7 +131,8 @@
 <input type="checkbox" id="finger" hidden>
 
 <div id="mk" class="b">
-  <div class="mkh" id="mkh" aria-label="ツールバーを移動"></div>
+  <div class="mkh" id="mkh" aria-label="ツールバーを移動（タップで最小化）"></div>
+  <button class="mkx" id="mkX" aria-label="ツールバーを最小化"><i data-i="minimize"></i></button>
   <div class="mkg">
     <button class="mkb" id="mkSel" aria-label="選択・スクロール"><i data-i="cur"></i></button>
     <button class="mkb" id="mkUndo" aria-label="元に戻す"><i data-i="undo"></i></button>
@@ -152,7 +153,7 @@
     <button class="mkb" id="mkMore" aria-label="その他"><i data-i="more_horiz"></i></button>
   </div>
 </div>
-<button id="mkMin" class="mkb" hidden aria-label="ツールバーを開く"><i data-i="edit"></i></button>
+<button id="mkMin" class="mkb" hidden aria-label="ツールバーを開く"><i data-i="edit"></i><span class="dot"></span></button>
 <div id="rul"><div class="rbody"></div><button class="rg rmove" aria-label="定規を移動"><i data-i="open_with"></i></button><button class="rg rrot" aria-label="定規を回転"><i data-i="sync"></i></button><button class="rg rx" aria-label="定規を閉じる"><i data-i="close"></i></button></div>
 <nav id="dock">
   <button class="tool on" data-t="select" aria-label="選択"><i data-i="cur"></i></button>
