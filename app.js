@@ -818,7 +818,7 @@ function jhUpdate(){const b=$('#jb'),f=$('#jf');if(b){b.disabled=!JH.back.length
 function pageBack(){if(!JH.back.length)return;JH.fwd.push(S.cur);go(JH.back.pop(),true);jhUpdate()}
 function pageFwd(){if(!JH.fwd.length)return;JH.back.push(S.cur);go(JH.fwd.pop(),true);jhUpdate()}
 $('#jb').onclick=pageBack;$('#jf').onclick=pageFwd;
-const mk=$('#mk'),prCol=()=>(getComputedStyle(document.documentElement).getPropertyValue('--pr')||'#6750a4').trim();
+let mk=$('#mk'),prCol=()=>(getComputedStyle(document.documentElement).getPropertyValue('--pr')||'#6750a4').trim();
 const TIPS={
  pen:'<path d="M20 4 L27 34 H13 Z" style="fill:var(--c-pen)"/><rect x="11" y="32" width="18" height="92" rx="4" fill="#f4f4f5" stroke="#d8d8dc"/><rect x="11" y="52" width="18" height="12" style="fill:var(--c-pen)"/>',
  fine:'<rect x="18" y="4" width="4" height="22" style="fill:var(--c-fine)"/><path d="M14 26h12l3 8H11z" fill="#cfcfd4"/><rect x="11" y="34" width="18" height="90" rx="3" fill="#f4f4f5" stroke="#d8d8dc"/><rect x="11" y="62" width="18" height="6" style="fill:var(--c-fine)"/>',
@@ -949,7 +949,7 @@ function lassoUp(e){const d=D;D=null;const i=d.i;
     ['content_copy','複製',()=>{const cp=set.map(s=>{const n=JSON.parse(JSON.stringify(s));shiftStroke(n,12,12);return n});A(i).s.push(...cp);S.ls={i,set:cp,b:ubox(cp)};done()}],
     ['palette','色を現在の色に変更',()=>{set.forEach(s=>s.c=s.t==='m'?S.col[s.k]:(s.t==='h'?S.col.hl:s.t==='s'?S.col.sh:S.col.pen));done()}],
     ['add','太くする',()=>{set.forEach(s=>{if(s.t!=='m')s.w=Math.min(60,s.w*1.3)});done()}],['remove','細くする',()=>{set.forEach(s=>{if(s.t!=='m')s.w=Math.max(.5,s.w/1.3)});done()}]]),40)}
-mkPlace(CFG.mkPos||'b');
+
 
 /* compact icon bar shown above a selection */
 function popBar(rc,items){closePop();const p=document.createElement('div');p.className='pop row';
@@ -1030,3 +1030,117 @@ function polyOf(k,x0,y0,x1,y1){const cx=(x0+x1)/2,cy=(y0+y1)/2,rx=Math.abs(x1-x0
   if(k==='tri')return[[cx,Math.min(y0,y1)],[Math.max(x0,x1),Math.max(y0,y1)],[Math.min(x0,x1),Math.max(y0,y1)]];
   if(k==='diamond')return[[cx,cy-ry],[cx+rx,cy],[cx,cy+ry],[cx-rx,cy]];
   const p=[];for(let i=0;i<10;i++){const an=-Math.PI/2+i*Math.PI/5,r=i%2?.4:1;p.push([cx+rx*r*Math.cos(an),cy+ry*r*Math.sin(an)])}return p}
+
+
+/* ================= v17: toolbar rebuilt — one layout source, CSS transitions for every change ================= */
+let MK_DRAG=false;
+function mkTB(){return{H:118,W:920,VW:104}}
+function mkDims(p){if(p==='c')return{w:72,h:72};const T=mkTB();if(p==='l'||p==='r')return{w:T.VW,h:Math.max(300,Math.min(660,innerHeight-200))};return{w:Math.min(T.W,innerWidth-24),h:T.H}}
+function mkTopY(){return document.body.classList.contains('barhide')?16:88}
+function mkBase(p,corner,d){const W=innerWidth,H=innerHeight;
+  if(p==='b')return{x:(W-d.w)/2,y:H-d.h-18};
+  if(p==='t')return{x:(W-d.w)/2,y:mkTopY()};
+  if(p==='l')return{x:12,y:(H-d.h)/2};
+  if(p==='r')return{x:W-d.w-12,y:(H-d.h)/2};
+  if(p==='c'){const c=corner||'bl';return{x:c[1]==='l'?14:W-d.w-14,y:c[0]==='t'?mkTopY():H-d.h-18}}
+  return{x:CFG.mkX*W,y:CFG.mkY*H}}
+function mkApply(p,corner,fx,fy){
+  if(p==='c'){if(CFG.mkPos&&CFG.mkPos!=='c')CFG.mkPrev=CFG.mkPos;CFG.mkCorner=corner||CFG.mkCorner||'bl'}
+  if(p==='f'&&fx!=null){CFG.mkX=fx;CFG.mkY=fy}
+  CFG.mkPos=p;
+  const d=mkDims(p),b=mkBase(p,CFG.mkCorner,d);
+  if(p==='f'){b.x=Math.max(8,Math.min(innerWidth-d.w-8,b.x));b.y=Math.max(8,Math.min(innerHeight-d.h-8,b.y));CFG.mkX=b.x/innerWidth;CFG.mkY=b.y/innerHeight}
+  mk.className=p==='c'?`c ${CFG.mkCorner}`:p;
+  mk.style.transform='';mk.style.left=b.x+'px';mk.style.top=b.y+'px';mk.style.width=d.w+'px';mk.style.height=d.h+'px';
+  MODES.forEach(q=>document.body.classList.toggle('mk-'+q,q===p));
+  saveCfg();mkSync()}
+function mkPlace(p,a,b){if(p==='c')return mkApply('c',a||CFG.mkCorner||'bl');if(p==='f')return mkApply('f',null,a!=null?a:CFG.mkX,b!=null?b:CFG.mkY);return mkApply(p)}
+function mkExpand(){const prev=CFG.mkPrev&&CFG.mkPrev!=='c'?CFG.mkPrev:'b';if(prev==='f')mkApply('f',null,CFG.mkX,CFG.mkY);else mkApply(prev)}
+function mkMinimize(on){if(!on){mkExpand();return}const r=mk.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;mkApply('c',(cy>innerHeight/2?'b':'t')+(cx>innerWidth/2?'r':'l'))}
+function mkZone(x,y,cur){const W=innerWidth,H=innerHeight,k=cur&&cur!=='f'?1.35:1,m=90*k,c=150*k,l=x<c,r=x>W-c,t=y<c,b=y>H-c;
+  if((l||r)&&(t||b))return{m:'c',corner:(b?'b':'t')+(l?'l':'r')};
+  if(x<m)return{m:'l'};if(x>W-m)return{m:'r'};if(y<m)return{m:'t'};if(y>H-m)return{m:'b'};return{m:'f'}}
+function mkSync(){if(!mk||!mk.querySelector||!mk.querySelector('#mkTips'))return;
+  const t=S.tool,y=S.ps.y,on={pen:t==='pen'&&y==='f',fine:t==='pen'&&y==='b',marker:t==='pen'&&y==='m',brush:t==='pen'&&y==='r',pencil:t==='pen'&&y==='p',hl:t==='hl',er:t==='er',ruler:R.on};
+  $$('#mkTips .tk').forEach(b=>b.classList.toggle('on',!!on[b.dataset.k]));
+  $('#mkSel').classList.toggle('on',t==='select');$('#mkLasso').classList.toggle('on',t==='lasso');
+  const kd=S.tb?'tx':({pen:'pen',shape:'shape',hl:'hl',hlt:'hlt',ult:'ult',stt:'stt',text:'tx'})[t]||'pen',cur=colorOf(kd),pc=n=>y===n?S.col.pen:S.py[n].c;
+  const st=mk.style;st.setProperty('--cur',cur);st.setProperty('--c-pen',pc('f'));st.setProperty('--c-fine',pc('b'));st.setProperty('--c-marker',pc('m'));st.setProperty('--c-brush',pc('r'));st.setProperty('--c-pencil',pc('p'));st.setProperty('--c-hl',S.col.hl);
+  const v=$('#mkHlV');if(v)v.textContent=Math.round(S.w.hl);
+  const cp=$('#mkCpt'),nh=cptHTML();if(cp.dataset.h!==nh){cp.dataset.h=nh;cp.innerHTML=nh;if(cp.animate&&document.body.dataset.motion!=='o')cp.animate([{scale:.25,rotate:'-45deg',opacity:0},{scale:1.1,rotate:'4deg',opacity:1,offset:.7},{scale:1,rotate:'0deg',opacity:1}],{duration:560,easing:'ease-out'})}
+  $$('#mkCols .sc[data-c]').forEach(b=>b.classList.toggle('on',b.dataset.c.toLowerCase()===cur.toLowerCase()))}
+function mkRebuild(){const fresh=mk.cloneNode(false);mk.replaceWith(fresh);mk=fresh;
+  const TIPK=['pen','fine','marker','brush','hl','er','pencil','ruler'];
+  mk.innerHTML=`<div class="mkh" id="mkh"></div>
+<button class="mkx" id="mkX" aria-label="ツールバーを小さくする"><i data-i="close_fullscreen"></i></button>
+<div class="mkbody" id="mkBody">
+  <div class="mkg"><button class="mkb" id="mkSel" aria-label="選択"><i data-i="cur"></i></button><button class="mkb" id="mkUndo" aria-label="元に戻す"><i data-i="undo"></i></button><button class="mkb" id="mkRedo" aria-label="やり直す"><i data-i="redo"></i></button></div>
+  <div class="mkt" id="mkTips">${TIPK.map(k=>`<button class="tk" data-k="${k}" aria-label="${k}"><svg viewBox="0 0 40 120" preserveAspectRatio="xMidYMid meet">${TIPS[k]}</svg></button>`).join('')}</div>
+  <div class="mkc" id="mkCols">${QC.map(c=>`<button class="sc" data-c="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}<label class="sc wheel" aria-label="色を選ぶ"><input type="color" id="mkCc" value="#000000"></label></div>
+  <div class="mkg"><button class="mkb" id="mkLasso" aria-label="投げ縄で選択"><i data-i="lasso_select"></i></button><button class="mkb" id="mkAdd" aria-label="追加"><i data-i="plus"></i></button><button class="mkb" id="mkMore" aria-label="その他"><i data-i="more_horiz"></i></button></div>
+</div>
+<button class="mkcpt" id="mkCpt" aria-label="ツールバーを開く"></button>`;
+  icons(mk)}
+function mkColor(c){if(S.ls){const i=S.ls.i;S.ls.set.forEach(s=>s.c=c);commit();ink(i);drawBox(i,S.ls.b);return}
+  const okT=['pen','hl','shape','hlt','ult','stt','text'];if(!S.tb&&!okT.includes(S.tool))setTool('pen');setColor(c,true);mkSync()}
+function mkMoreItems(){return[['arrow_downward','ツールバーを下に',()=>mkPlace('b')],['arrow_upward','ツールバーを上に',()=>mkPlace('t')],['arrow_back','ツールバーを左に',()=>mkPlace('l')],['arrow_forward','ツールバーを右に',()=>mkPlace('r')],['open_with','ツールバーを自由に配置',()=>mkPlace('f',.25,.5)],'-',['close_fullscreen','小さくする（角のペンアイコン）',()=>mkMinimize(true)],['tune','ペンの詳細設定',()=>{if(!['pen','hl','shape'].includes(S.tool))setTool('pen');S.compact=false;$('#props').classList.remove('off');syncProps()}],['help','使い方ガイド',showGuide]]}
+function mkWire(){
+  $('#mkTips').addEventListener('click',e=>{const b=e.target.closest('.tk');if(!b)return;const k=b.dataset.k;
+    if(k==='ruler'){R.on=!R.on;$('#rul').classList.toggle('on',R.on);if(R.on)rulReset();mkSync();return}
+    const y={pen:'f',fine:'b',marker:'m',brush:'r',pencil:'p'}[k];
+    if(y){if(S.tool==='pen'){if(S.ps.y===y)setTool('pen');else{setPenStyle(y);$('#props').classList.add('off');syncProps();mkSync()}}else{setPenStyle(y);setTool('pen')}return}
+    setTool(k)});
+  $('#mkCols').addEventListener('click',e=>{const b=e.target.closest('.sc[data-c]');if(b)mkColor(b.dataset.c)});
+  $('#mkCc').addEventListener('change',e=>mkColor(e.target.value));
+  $('#mkSel').onclick=()=>setTool('select');
+  $('#mkLasso').onclick=()=>setTool('lasso');
+  $('#mkUndo').onclick=()=>undo(-1);
+  $('#mkRedo').onclick=()=>undo(1);
+  $('#mkAdd').onclick=e=>{e.stopPropagation();popMenu(e.currentTarget,ADDMENU())};
+  $('#mkMore').onclick=e=>{e.stopPropagation();popMenu(e.currentTarget,mkMoreItems())};
+  $('#mkX').onclick=e=>{e.stopPropagation();mkMinimize(true)};
+  mkDrag()}
+function mkDrag(){
+  let s=null,raf=0,last=0;
+  /* one frame: decide the shape (debounced), then glide the body toward the pointer, clamped to the target size */
+  const frame=now=>{if(!s)return;const dt=Math.min(.05,(now-(last||now))/1000);last=now;
+    const z=mkZone(s.px,s.py,s.zone),k=z.m+(z.corner||'');
+    if(k!==s.candK){s.candK=k;s.candT=now}
+    const cur=s.zone+(s.zone==='c'?s.corner:'');
+    if(s.moved&&k!==cur&&now-s.candT>=110){
+      const r0=mk.getBoundingClientRect(),fx=r0.width?s.gx/r0.width:.5,fy=r0.height?s.gy/r0.height:.5;
+      s.zone=z.m;s.corner=z.corner||s.corner;const d=mkDims(s.zone);
+      mk.className=[s.zone,s.zone==='c'?s.corner:'','drag'].filter(Boolean).join(' ');
+      mk.style.width=d.w+'px';mk.style.height=d.h+'px';s.tw=d.w;s.th=d.h;s.gx=fx*d.w;s.gy=fy*d.h}
+    if(!s.tw){const r=mk.getBoundingClientRect();s.tw=r.width;s.th=r.height}
+    const w=Math.max(s.tw,mk.offsetWidth),h=Math.max(s.th,mk.offsetHeight),tx=Math.max(6,Math.min(innerWidth-w-6,s.px-s.gx)),ty=Math.max(6,Math.min(innerHeight-h-6,s.py-s.gy)),f=1-Math.exp(-dt*16);
+    s.x+=(tx-s.x)*f;s.y+=(ty-s.y)*f;mk.style.transform=`translate3d(${s.x-s.bx}px,${s.y-s.by}px,0)`;
+    raf=requestAnimationFrame(frame)};
+  mk.addEventListener('pointerdown',e=>{
+    if(e.button||s)return;
+    const onH=!!e.target.closest('#mkh'),onC=!!e.target.closest('#mkCpt'),onB=!e.target.closest('button,input,label,.tk,.sc,.pop');
+    if(!(onH||onC||(onB&&CFG.mkPos!=='c')))return;
+    e.preventDefault();try{mk.setPointerCapture(e.pointerId)}catch(_){}
+    const r=mk.getBoundingClientRect(),bx=parseFloat(mk.style.left)||r.left,by=parseFloat(mk.style.top)||r.top;
+    s={id:e.pointerId,sx:e.clientX,sy:e.clientY,px:e.clientX,py:e.clientY,moved:false,onH,onC,zone:CFG.mkPos,corner:CFG.mkCorner,
+       gx:e.clientX-r.left,gy:e.clientY-r.top,x:bx,y:by,bx,by,candK:null,candT:0,tw:null,th:null};
+    MK_DRAG=true;mk.classList.add('drag');last=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(frame)});
+  mk.addEventListener('pointermove',e=>{
+    if(!s||e.pointerId!==s.id)return;
+    if(!s.moved&&Math.hypot(e.clientX-s.sx,e.clientY-s.sy)<6)return;
+    s.moved=true;s.px=e.clientX;s.py=e.clientY});
+  const up=e=>{
+    if(!s||e.pointerId!==s.id)return;
+    cancelAnimationFrame(raf);const d=s;s=null;
+    if(!d.moved){mk.classList.remove('drag');mk.style.transform='';MK_DRAG=false;
+      if(d.onC)mkExpand();else if(d.onH)mkMinimize(true);return}
+    /* freeze at the visual spot without animating, then glide to the target */
+    mk.style.transform='';mk.style.left=d.x+'px';mk.style.top=d.y+'px';void mk.offsetWidth;
+    MK_DRAG=false;
+    /* the shape is decided by where the finger lifts */
+    const z=mkZone(d.px,d.py,d.zone),zone=z.m,corner=z.corner||d.corner;
+    if(zone==='f'){const w=d.tw||mk.offsetWidth,h=d.th||mk.offsetHeight;mkApply('f',null,Math.max(8,Math.min(innerWidth-w-8,d.x))/innerWidth,Math.max(8,Math.min(innerHeight-h-8,d.y))/innerHeight)}
+    else mkApply(zone,corner)};
+  mk.addEventListener('pointerup',up);mk.addEventListener('pointercancel',up)}
+addEventListener('resize',()=>{if(!MK_DRAG&&mk&&CFG.mkPos)mkApply(CFG.mkPos,CFG.mkCorner,CFG.mkX,CFG.mkY)});
+mkRebuild();mkWire();mkApply(CFG.mkPos||'b',CFG.mkCorner,CFG.mkX,CFG.mkY);
