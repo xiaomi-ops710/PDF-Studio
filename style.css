@@ -713,3 +713,20 @@ body[data-tool=laser] .ink{cursor:none}
 #mk:not(.c){background:color-mix(in srgb,color-mix(in srgb,var(--bg) 84%,var(--cur,#000) 7%) 92%,transparent)}
 #mkCpt svg{transition:transform .5s cubic-bezier(.34,1.45,.64,1)}
 #mkCpt:hover svg{transform:rotate(-8deg) translateY(-2px)}
+
+/* ===== v16: deterministic toolbar layout (replaces the fragile height/offset tricks) ===== */
+/* horizontal shapes (bottom / top / floating): natural height from content, nothing clipped, nothing hidden */
+#mk.b,#mk.t,#mk.f{flex-direction:row;align-items:center;justify-content:flex-start;height:auto;width:auto;max-width:calc(100vw - 20px);overflow:visible;padding:24px 18px 14px;gap:14px}
+#mk.b .mkh,#mk.t .mkh,#mk.f .mkh{top:8px;bottom:auto;left:50%;right:auto;margin:0 0 0 -23px;width:46px;height:5px}
+#mk.b .mkx,#mk.t .mkx,#mk.f .mkx{top:auto;bottom:auto;right:8px;top:6px}
+#mk.b .mkt,#mk.t .mkt,#mk.f .mkt{height:auto;align-items:center;transform:none;overflow:visible;gap:6px;padding:0;flex:0 1 auto}
+#mk.b .tk,#mk.t .tk,#mk.f .tk{width:44px;height:84px;transform:none;flex:none}
+#mk.b .tk.on,#mk.t .tk.on,#mk.f .tk.on{transform:translateY(-6px)}
+#mk.b .tk:active,#mk.t .tk:active,#mk.f .tk:active{transform:translateY(-2px)}
+#mk.b .tk svg,#mk.t .tk svg,#mk.f .tk svg{display:block;width:36px;height:84px;margin:0 auto;transform:none}
+#mk.b .mkg,#mk.t .mkg,#mk.f .mkg,#mk.b .mkc,#mk.t .mkc,#mk.f .mkc{margin:0;align-self:center}
+#mk.b .mkc,#mk.t .mkc,#mk.f .mkc{grid-template-columns:repeat(3,34px)}
+/* top shape uses the same artwork, not mirrored */
+#mk.t .tk svg{transform:none}
+/* the drag handle keeps its own space above the row so it never covers a tool */
+#mk.b .mkh,#mk.t .mkh,#mk.f .mkh{z-index:6}
