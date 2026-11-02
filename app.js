@@ -842,7 +842,7 @@ function mkSync(){const t=S.tool,y=S.ps.y,on={pen:t==='pen'&&y==='f',fine:t==='p
   $$('#mkTips .tk').forEach(b=>b.classList.toggle('on',!!on[b.dataset.k]));$('#mkSel').classList.toggle('on',t==='select');$('#mkLasso').classList.toggle('on',t==='lasso');
   const kd=S.tb?'tx':({pen:'pen',shape:'shape',hl:'hl',hlt:'hlt',ult:'ult',stt:'stt',text:'tx'})[t]||'pen',cur=colorOf(kd),pc=n=>y===n?S.col.pen:S.py[n].c;
   const st=mk.style;st.setProperty('--cur',cur);st.setProperty('--c-pen',pc('f'));st.setProperty('--c-fine',pc('b'));st.setProperty('--c-marker',pc('m'));st.setProperty('--c-brush',pc('r'));st.setProperty('--c-pencil',pc('p'));st.setProperty('--c-hl',S.col.hl);
-  const v=$('#mkHlV');if(v)v.textContent=Math.round(S.w.hl);$('#mkCpt').innerHTML=cptHTML();
+  const v=$('#mkHlV');if(v)v.textContent=Math.round(S.w.hl);const cp=$('#mkCpt'),nh=cptHTML();if(cp.dataset.h!==nh){cp.dataset.h=nh;cp.innerHTML=nh;if(cp.animate&&document.body.dataset.motion!=='o')cp.animate([{scale:.25,rotate:'-45deg',opacity:0},{scale:1.1,rotate:'4deg',opacity:1,offset:.7},{scale:1,rotate:'0deg',opacity:1}],{duration:560,easing:'ease-out'})}
   $$('#mkCols .sc[data-c]').forEach(b=>b.classList.toggle('on',b.dataset.c.toLowerCase()===cur.toLowerCase()))}
 $('#mkTips').addEventListener('click',e=>{const b=e.target.closest('.tk');if(!b)return;const k=b.dataset.k;
   if(k==='ruler'){R.on=!R.on;$('#rul').classList.toggle('on',R.on);if(R.on)rulReset();mkSync();return}
@@ -860,11 +860,12 @@ function mkClamp(x,y){const w=mk.offsetWidth,h=mk.offsetHeight;return[Math.max(8
 function mkMode(m,corner,live){const keep=mk.classList.contains('drag')?['drag']:[];mk.className=[m,...(m==='c'?[corner||CFG.mkCorner||'bl']:[]),...keep].join(' ');if(!live)MODES.forEach(q=>document.body.classList.toggle('mk-'+q,q===m))}
 /* FLIP morph: size, position and every control glide with a spring while the layout changes underneath */
 /* size spring: width/height follow a damped spring every frame, so retargeting mid-flight keeps the velocity (no jolt) */
+function keepIn(){if(!mk.style.left&&!mk.style.top)return;const r=mk.getBoundingClientRect();let dx=0,dy=0;if(r.left<4)dx=4-r.left;if(r.right>innerWidth-4)dx=innerWidth-4-r.right;if(r.top<4)dy=4-r.top;if(r.bottom>innerHeight-4)dy=innerHeight-4-r.bottom;if(dx)mk.style.left=(parseFloat(mk.style.left)+dx)+'px';if(dy)mk.style.top=(parseFloat(mk.style.top)+dy)+'px'}
 const SPR_K=50,SPR_D=13.5,SZ={w:0,h:0,vw:0,vh:0,tw:0,th:0,on:false,t:0};
 function szStep(now){if(!SZ.on)return;const dt=Math.min(.034,(now-SZ.t)/1000);SZ.t=now;const n=Math.max(1,Math.ceil(dt/.008)),h=dt/n,small=SZ.tw<130&&SZ.th<130,K=small?118:SPR_K,D=small?19:SPR_D;
   for(let i=0;i<n;i++){SZ.vw+=((SZ.tw-SZ.w)*K-SZ.vw*D)*h;SZ.w+=SZ.vw*h;SZ.vh+=((SZ.th-SZ.h)*K-SZ.vh*D)*h;SZ.h+=SZ.vh*h}
-  if(Math.abs(SZ.tw-SZ.w)<.3&&Math.abs(SZ.th-SZ.h)<.3&&Math.abs(SZ.vw)<.5&&Math.abs(SZ.vh)<.5){SZ.on=false;SZ.w=SZ.tw;SZ.h=SZ.th;mk.style.width='';mk.style.height='';return}
-  mk.style.width=SZ.w+'px';mk.style.height=SZ.h+'px';requestAnimationFrame(szStep)}
+  if(Math.abs(SZ.tw-SZ.w)<.3&&Math.abs(SZ.th-SZ.h)<.3&&Math.abs(SZ.vw)<.5&&Math.abs(SZ.vh)<.5){SZ.on=false;SZ.w=SZ.tw;SZ.h=SZ.th;mk.style.width='';mk.style.height='';keepIn();return}
+  if(mk.style.left)mk.style.left=Math.max(4+SZ.w*.03,Math.min(innerWidth-SZ.w-4-SZ.w*.03,parseFloat(mk.style.left)))+'px';if(mk.style.top)mk.style.top=Math.max(4+SZ.h*.03,Math.min(innerHeight-SZ.h-4-SZ.h*.03,parseFloat(mk.style.top)))+'px';mk.style.width=SZ.w+'px';mk.style.height=SZ.h+'px';keepIn();requestAnimationFrame(szStep)}
 function mkMorph(apply,opt){
   if(document.body.dataset.motion==='o'||!mk.offsetWidth){apply();return}
   const dragM=!!(opt&&opt.drag),lv=[...mk.querySelectorAll('.mkb,.tk,.sc,#mkCpt,.mkh,.mkx')];
@@ -877,7 +878,8 @@ function mkMorph(apply,opt){
   SZ.tw=r1.width;SZ.th=r1.height;
   if(!SZ.on){SZ.on=true;SZ.t=performance.now();requestAnimationFrame(szStep)}
   mk.style.width=SZ.w+'px';mk.style.height=SZ.h+'px';
-  if(!dragM){const dx=r0.left-r1.left,dy=r0.top-r1.top;if(Math.abs(dx)+Math.abs(dy)>1)mk.animate([{translate:`${dx}px ${dy}px`},{translate:'0 0'}],{duration:640,easing:SPR})}
+  /* position tween only when the size is unchanged (safe on screen); size-changing shape moves rely on the spring */
+  if(!dragM&&Math.abs(r0.width-r1.width)<4&&Math.abs(r0.height-r1.height)<4){const c0=Math.max(4,Math.min(innerWidth-r1.width-4,r0.left)),d0=Math.max(4,Math.min(innerHeight-r1.height-4,r0.top)),dx=c0-r1.left,dy=d0-r1.top;if(Math.abs(dx)+Math.abs(dy)>1)mk.animate([{translate:`${dx}px ${dy}px`},{translate:'0 0'}],{duration:640,easing:SPR})}
   const o={duration:620,easing:SPR};
   lv.forEach((e,i)=>{if(!L1[i])return;
     if(!L0[i]){e.animate([{opacity:0,scale:.4},{opacity:1,scale:1}],{duration:520,delay:120,easing:SPR,fill:'backwards'});return}
@@ -898,12 +900,12 @@ function mkZone(x,y,cur){const W=innerWidth,H=innerHeight,k=cur&&cur!=='f'?1.4:1
   if((l||r)&&(t||b))return{m:'c',corner:(b?'b':'t')+(l?'l':'r')};
   if(x<m)return{m:'l'};if(x>W-m)return{m:'r'};if(y<m)return{m:'t'};if(y>H-m)return{m:'b'};return{m:'f'}}
 (function(){let st=null,raf=0,Z='b',Zc=null;
-  const loop=()=>{if(!st)return;st.gx+=(st.gxT-st.gx)*.12;st.gy+=(st.gyT-st.gy)*.12;st.tx=st.cx-st.gx;st.ty=st.cy-st.gy;st.vx=(st.vx+(st.tx-st.x)*.2)*.64;st.vy=(st.vy+(st.ty-st.y)*.2)*.64;st.x+=st.vx;st.y+=st.vy;mk.style.left=st.x+'px';mk.style.top=st.y+'px';mk.style.rotate=Math.max(-6,Math.min(6,st.vx*.45))+'deg';raf=requestAnimationFrame(loop)};
+  const loop=now=>{if(!st)return;const dt=Math.min(.05,(now-(st.t||now))/1000);st.t=now;st.gx+=(st.gxT-st.gx)*(1-Math.exp(-dt*9));st.gy+=(st.gyT-st.gy)*(1-Math.exp(-dt*9));st.tx=st.cx-st.gx;st.ty=st.cy-st.gy;const f=1-Math.exp(-dt*15);st.x+=(st.tx-st.x)*f;st.y+=(st.ty-st.y)*f;const fw=mk.getBoundingClientRect();const mx=fw.width*.03,my=fw.height*.03;mk.style.left=Math.max(4+mx,Math.min(innerWidth-fw.width-4-mx,st.x))+'px';mk.style.top=Math.max(4+my,Math.min(innerHeight-fw.height-4-my,st.y))+'px';mk.style.rotate='';keepIn();raf=requestAnimationFrame(loop)};
   mk.addEventListener('pointerdown',e=>{if(e.button)return;const t=e.target,onH=!!t.closest('#mkh'),onC=!!t.closest('#mkCpt');
     if(!(onH||onC||t===mk||t.classList.contains('mkg')||t.classList.contains('mkc')))return;
     e.preventDefault();mk.setPointerCapture(e.pointerId);const r=mk.getBoundingClientRect();
     st={x:r.left,y:r.top,tx:r.left,ty:r.top,gx:e.clientX-r.left,gy:e.clientY-r.top,gxT:e.clientX-r.left,gyT:e.clientY-r.top,cx:e.clientX,cy:e.clientY,vx:0,vy:0,moved:false,id:e.pointerId,sx:e.clientX,sy:e.clientY,onH,onC};Z=CFG.mkPos;Zc=CFG.mkCorner;
-    mk.style.left=r.left+'px';mk.style.top=r.top+'px';mk.style.right='auto';mk.style.bottom='auto';mk.style.transform='none';mk.classList.add('drag');cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)});
+    mk.style.left=r.left+'px';mk.style.top=r.top+'px';mk.style.right='auto';mk.style.bottom='auto';mk.style.transform='none';mk.classList.add('drag');cancelAnimationFrame(raf);st.t=performance.now();raf=requestAnimationFrame(loop)});
   mk.addEventListener('pointermove',e=>{if(!st||e.pointerId!==st.id)return;if(Math.hypot(e.clientX-st.sx,e.clientY-st.sy)>6)st.moved=true;
     if(st.moved){const z=mkZone(e.clientX,e.clientY,Z);
       if(z.m!==Z||(z.m==='c'&&z.corner!==Zc)){Z=z.m;Zc=z.corner;mkMorph(()=>{const q0=mk.getBoundingClientRect();mkMode(z.m,z.corner,true);const r=mk.getBoundingClientRect(),h=z.m==='c'?r:$('#mkh').getBoundingClientRect();const fx=q0.width?st.gx/q0.width:.5,fy=q0.height?st.gy/q0.height:.5;if(z.m==='c'){st.gxT=r.width/2;st.gyT=r.height/2}else{st.gxT=fx*r.width;st.gyT=fy*r.height}},{drag:true})}}

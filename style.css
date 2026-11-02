@@ -650,10 +650,10 @@ body:not(.showprog) #rp{display:none!important}
 #peek{position:fixed;top:calc(6px + var(--sat));left:50%;width:84px;height:24px;margin-left:-42px;border-radius:12px;background:var(--sfh);box-shadow:var(--sh);z-index:7;display:none;place-items:center}
 #peek::before{content:"";width:34px;height:4px;border-radius:2px;background:var(--onv)}
 body.barhide:not(.nodoc):not(.imm) #peek{display:grid;animation:popS .4s var(--spring)}
-#mk{touch-action:none;transition:opacity .2s,scale .45s var(--spring),rotate .55s var(--spring),padding .5s cubic-bezier(.25,1.12,.35,1),gap .5s cubic-bezier(.25,1.12,.35,1),border-radius .5s cubic-bezier(.25,1.12,.35,1)}
+#mk{touch-action:none;transition:opacity .2s,scale .45s var(--spring),border-radius .5s cubic-bezier(.25,1.12,.35,1)}
 .mkt{touch-action:pan-x}
 #mk.l .mkt,#mk.r .mkt{touch-action:pan-y}
-#mk.drag{scale:1.045;box-shadow:0 22px 46px rgba(0,0,0,.3);transition:scale .3s var(--spring),opacity .2s,rotate .2s ease-out,box-shadow .3s;cursor:grabbing}
+#mk.drag{scale:1.045;box-shadow:0 22px 46px rgba(0,0,0,.3);transition:scale .3s var(--spring),opacity .2s,box-shadow .3s;cursor:grabbing}
 #mk.f{transform:none}
 .mkx{position:absolute;top:6px;right:16px;width:30px;height:30px;border-radius:15px;display:grid;place-items:center;color:var(--onv);z-index:2;transition:background .2s,transform .3s var(--spring)}
 .mkx:active{background:var(--sfhh);transform:scale(.85)}
@@ -688,3 +688,28 @@ body[data-tool=laser] .ink{cursor:none}
 /* compact: nothing inside the hidden groups may receive taps; only the pen icon does */
 #mk.c>:not(.mkcpt) *{pointer-events:none!important}
 #mk.c .mkcpt,#mk.c .mkcpt *{pointer-events:auto!important}
+
+/* one padding / gap for every docked shape, so the natural size never changes while the spring follows */
+#mk.b,#mk.t,#mk.l,#mk.r,#mk.f{padding:20px 14px 16px;gap:12px;rotate:none}
+#mk.c{padding:0;gap:0}
+/* the drag handle always sits above the tool artwork so grabbing it never hits an icon */
+.mkh{z-index:5}
+
+/* ===== v15: side grip, and iOS-style micro transitions ===== */
+/* vertical toolbar: grip sits in the middle of the inner edge */
+#mk.l .mkh,#mk.r .mkh{top:50%;left:auto;right:6px;width:5px;height:46px;margin:-23px 0 0 0}
+#mk.r .mkh{right:auto;left:6px}
+#mk.l .mkh::after,#mk.r .mkh::after{inset:-18px -12px}
+#mk.l .mkh,#mk.r .mkh{transform:none}
+#mk.l .mkx,#mk.r .mkx{top:auto;bottom:8px}
+/* tools: unselected ones recede, the chosen one lifts; ink follows the chosen colour */
+.tk{transition:transform .5s cubic-bezier(.34,1.45,.64,1),opacity .3s ease,filter .3s ease}
+.tk:not(.on){filter:saturate(.55);opacity:.82}
+.tk svg *{transition:fill .45s ease,stroke .35s ease}
+.sc{transition:transform .45s cubic-bezier(.34,1.45,.64,1),border-radius .3s cubic-bezier(.34,1.45,.64,1),box-shadow .25s ease}
+.sc.on{transform:scale(1.14)}
+.mkb{transition:background .35s ease,color .35s ease,border-radius .45s cubic-bezier(.34,1.45,.64,1),transform .3s cubic-bezier(.34,1.45,.64,1),opacity .3s ease}
+#mk{transition:opacity .2s,scale .45s var(--spring),border-radius .5s cubic-bezier(.25,1.12,.35,1),background-color .6s ease,box-shadow .4s ease}
+#mk:not(.c){background:color-mix(in srgb,color-mix(in srgb,var(--bg) 84%,var(--cur,#000) 7%) 92%,transparent)}
+#mkCpt svg{transition:transform .5s cubic-bezier(.34,1.45,.64,1)}
+#mkCpt:hover svg{transform:rotate(-8deg) translateY(-2px)}
