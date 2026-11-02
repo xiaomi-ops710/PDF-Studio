@@ -855,23 +855,35 @@ const ADDMENU=()=>[['text_fields','テキスト',()=>setTool('text')],['sticky_n
 $('#mkAdd').onclick=e=>{e.stopPropagation();popMenu(e.currentTarget,ADDMENU())};
 $('#mkMore').onclick=e=>{e.stopPropagation();popMenu(e.currentTarget,[['arrow_downward','ツールバーを下に',()=>mkPlace('b')],['arrow_upward','ツールバーを上に',()=>mkPlace('t')],['arrow_back','ツールバーを左に',()=>mkPlace('l')],['arrow_forward','ツールバーを右に',()=>mkPlace('r')],['open_with','ツールバーを自由に配置',()=>mkPlace('f',.25,.5)],'-',['close_fullscreen','小さくする（角のペンアイコン）',()=>mkMinimize(true)],['tune','ペンの詳細設定',()=>{if(!['pen','hl','shape'].includes(S.tool))setTool('pen');S.compact=false;$('#props').classList.remove('off');syncProps()}],['help','使い方ガイド',showGuide]])};
 /* shape-shifting toolbar: dock bottom/top, turn vertical at the side edges, shrink to a pen icon in the corners, or float */
-const SPR='cubic-bezier(.34,1.45,.64,1)',MODES=['b','t','l','r','f','c'];
+const SPR='cubic-bezier(.34,1.45,.64,1)',EASE_SIZE='cubic-bezier(.25,1.12,.35,1)',MODES=['b','t','l','r','f','c'];
 function mkClamp(x,y){const w=mk.offsetWidth,h=mk.offsetHeight;return[Math.max(8,Math.min(innerWidth-w-8,x)),Math.max(8,Math.min(innerHeight-h-8,y))]}
 function mkMode(m,corner,live){const keep=mk.classList.contains('drag')?['drag']:[];mk.className=[m,...(m==='c'?[corner||CFG.mkCorner||'bl']:[]),...keep].join(' ');if(!live)MODES.forEach(q=>document.body.classList.toggle('mk-'+q,q===m))}
 /* FLIP morph: size, position and every control glide with a spring while the layout changes underneath */
-function mkMorph(apply){
-  if(document.body.dataset.motion==='o'||!mk.animate||!mk.offsetWidth){apply();return}
-  const lv=[...mk.querySelectorAll('.mkb,.tk,.sc,#mkCpt,.mkh,.mkx')],r0=mk.getBoundingClientRect(),br0=getComputedStyle(mk).borderRadius,
-    L0=lv.map(e=>{const r=e.getBoundingClientRect();return r.width?[r.left-r0.left,r.top-r0.top]:null});
-  const kill=el=>el.getAnimations().filter(a=>!(window.CSSTransition&&a instanceof CSSTransition)).forEach(a=>a.cancel());kill(mk);lv.forEach(kill);
+/* size spring: width/height follow a damped spring every frame, so retargeting mid-flight keeps the velocity (no jolt) */
+const SPR_K=50,SPR_D=13.5,SZ={w:0,h:0,vw:0,vh:0,tw:0,th:0,on:false,t:0};
+function szStep(now){if(!SZ.on)return;const dt=Math.min(.034,(now-SZ.t)/1000);SZ.t=now;const n=Math.max(1,Math.ceil(dt/.008)),h=dt/n,small=SZ.tw<130&&SZ.th<130,K=small?118:SPR_K,D=small?19:SPR_D;
+  for(let i=0;i<n;i++){SZ.vw+=((SZ.tw-SZ.w)*K-SZ.vw*D)*h;SZ.w+=SZ.vw*h;SZ.vh+=((SZ.th-SZ.h)*K-SZ.vh*D)*h;SZ.h+=SZ.vh*h}
+  if(Math.abs(SZ.tw-SZ.w)<.3&&Math.abs(SZ.th-SZ.h)<.3&&Math.abs(SZ.vw)<.5&&Math.abs(SZ.vh)<.5){SZ.on=false;SZ.w=SZ.tw;SZ.h=SZ.th;mk.style.width='';mk.style.height='';return}
+  mk.style.width=SZ.w+'px';mk.style.height=SZ.h+'px';requestAnimationFrame(szStep)}
+function mkMorph(apply,opt){
+  if(document.body.dataset.motion==='o'||!mk.offsetWidth){apply();return}
+  const dragM=!!(opt&&opt.drag),lv=[...mk.querySelectorAll('.mkb,.tk,.sc,#mkCpt,.mkh,.mkx')];
+  const r0=mk.getBoundingClientRect(),L0=lv.map(e=>{const r=e.getBoundingClientRect();return r.width?[r.left-r0.left,r.top-r0.top]:null});
+  mk.getAnimations().forEach(a=>a.cancel());lv.forEach(e=>e.getAnimations().forEach(a=>a.cancel()));
+  if(!SZ.on){SZ.w=r0.width;SZ.h=r0.height;SZ.vw=SZ.vh=0}
   apply();
-  const r1=mk.getBoundingClientRect(),br1=getComputedStyle(mk).borderRadius,o={duration:640,easing:SPR};
-  mk.animate([{translate:`${r0.left-r1.left}px ${r0.top-r1.top}px`,width:r0.width+'px',height:r0.height+'px',borderRadius:br0},{translate:'0 0',width:r1.width+'px',height:r1.height+'px',borderRadius:br1}],o);
-  lv.forEach((e,i)=>{const r=e.getBoundingClientRect();if(!r.width)return;
-    if(!L0[i]){e.animate([{opacity:0,scale:.4},{opacity:1,scale:1}],{duration:560,delay:140,easing:SPR,fill:'backwards'});return}
-    const dx=L0[i][0]-(r.left-r1.left),dy=L0[i][1]-(r.top-r1.top);if(Math.abs(dx)+Math.abs(dy)>1)e.animate([{translate:`${dx}px ${dy}px`},{translate:'0 0'}],o)})}
-function floatAt(x,y){const c=mkClampR(x,y);mk.style.left=c[0]+'px';mk.style.top=c[1]+'px';mk.style.bottom='auto';mk.style.transform='none';CFG.mkX=c[0]/innerWidth;CFG.mkY=c[1]/innerHeight;requestAnimationFrame(()=>{if(CFG.mkPos!=='f')return;const d=mkClampR(parseFloat(mk.style.left),parseFloat(mk.style.top));if(Math.abs(d[0]-parseFloat(mk.style.left))>.5||Math.abs(d[1]-parseFloat(mk.style.top))>.5){mk.style.left=d[0]+'px';mk.style.top=d[1]+'px';CFG.mkX=d[0]/innerWidth;CFG.mkY=d[1]/innerHeight}})}
+  mk.style.width='';mk.style.height='';
+  const r1=mk.getBoundingClientRect(),L1=lv.map(e=>{const r=e.getBoundingClientRect();return r.width?[r.left-r1.left,r.top-r1.top]:null});
+  SZ.tw=r1.width;SZ.th=r1.height;
+  if(!SZ.on){SZ.on=true;SZ.t=performance.now();requestAnimationFrame(szStep)}
+  mk.style.width=SZ.w+'px';mk.style.height=SZ.h+'px';
+  if(!dragM){const dx=r0.left-r1.left,dy=r0.top-r1.top;if(Math.abs(dx)+Math.abs(dy)>1)mk.animate([{translate:`${dx}px ${dy}px`},{translate:'0 0'}],{duration:640,easing:SPR})}
+  const o={duration:620,easing:SPR};
+  lv.forEach((e,i)=>{if(!L1[i])return;
+    if(!L0[i]){e.animate([{opacity:0,scale:.4},{opacity:1,scale:1}],{duration:520,delay:120,easing:SPR,fill:'backwards'});return}
+    const dx=L0[i][0]-L1[i][0],dy=L0[i][1]-L1[i][1];if(Math.abs(dx)+Math.abs(dy)>1)e.animate([{translate:`${dx}px ${dy}px`},{translate:'0 0'}],o)})}
 function mkClampR(x,y){const r=mk.getBoundingClientRect(),w=r.width||mk.offsetWidth,h=r.height||mk.offsetHeight;return[Math.max(8,Math.min(innerWidth-w-8,x)),Math.max(8,Math.min(innerHeight-h-8,y))]}
+function floatAt(x,y){const c=mkClampR(x,y);mk.style.left=c[0]+'px';mk.style.top=c[1]+'px';mk.style.bottom='auto';mk.style.transform='none';CFG.mkX=c[0]/innerWidth;CFG.mkY=c[1]/innerHeight;requestAnimationFrame(()=>{if(CFG.mkPos!=='f')return;const d=mkClampR(parseFloat(mk.style.left),parseFloat(mk.style.top));if(Math.abs(d[0]-parseFloat(mk.style.left))>.5||Math.abs(d[1]-parseFloat(mk.style.top))>.5){mk.style.left=d[0]+'px';mk.style.top=d[1]+'px';CFG.mkX=d[0]/innerWidth;CFG.mkY=d[1]/innerHeight}})}
 function mkPlace(p,a,b){
   mkMorph(()=>{if(CFG.mkPos&&CFG.mkPos!=='c'&&p==='c')CFG.mkPrev=CFG.mkPos;CFG.mkPos=p;if(p==='c')CFG.mkCorner=a||CFG.mkCorner||'bl';
     mk.removeAttribute('style');mkMode(p,CFG.mkCorner);
@@ -886,16 +898,16 @@ function mkZone(x,y,cur){const W=innerWidth,H=innerHeight,k=cur&&cur!=='f'?1.4:1
   if((l||r)&&(t||b))return{m:'c',corner:(b?'b':'t')+(l?'l':'r')};
   if(x<m)return{m:'l'};if(x>W-m)return{m:'r'};if(y<m)return{m:'t'};if(y>H-m)return{m:'b'};return{m:'f'}}
 (function(){let st=null,raf=0,Z='b',Zc=null;
-  const loop=()=>{if(!st)return;st.vx=(st.vx+(st.tx-st.x)*.2)*.64;st.vy=(st.vy+(st.ty-st.y)*.2)*.64;st.x+=st.vx;st.y+=st.vy;mk.style.left=st.x+'px';mk.style.top=st.y+'px';mk.style.rotate=Math.max(-6,Math.min(6,st.vx*.45))+'deg';raf=requestAnimationFrame(loop)};
+  const loop=()=>{if(!st)return;st.gx+=(st.gxT-st.gx)*.12;st.gy+=(st.gyT-st.gy)*.12;st.tx=st.cx-st.gx;st.ty=st.cy-st.gy;st.vx=(st.vx+(st.tx-st.x)*.2)*.64;st.vy=(st.vy+(st.ty-st.y)*.2)*.64;st.x+=st.vx;st.y+=st.vy;mk.style.left=st.x+'px';mk.style.top=st.y+'px';mk.style.rotate=Math.max(-6,Math.min(6,st.vx*.45))+'deg';raf=requestAnimationFrame(loop)};
   mk.addEventListener('pointerdown',e=>{if(e.button)return;const t=e.target,onH=!!t.closest('#mkh'),onC=!!t.closest('#mkCpt');
     if(!(onH||onC||t===mk||t.classList.contains('mkg')||t.classList.contains('mkc')))return;
     e.preventDefault();mk.setPointerCapture(e.pointerId);const r=mk.getBoundingClientRect();
-    st={x:r.left,y:r.top,tx:r.left,ty:r.top,gx:e.clientX-r.left,gy:e.clientY-r.top,vx:0,vy:0,moved:false,id:e.pointerId,sx:e.clientX,sy:e.clientY,onH,onC};Z=CFG.mkPos;Zc=CFG.mkCorner;
+    st={x:r.left,y:r.top,tx:r.left,ty:r.top,gx:e.clientX-r.left,gy:e.clientY-r.top,gxT:e.clientX-r.left,gyT:e.clientY-r.top,cx:e.clientX,cy:e.clientY,vx:0,vy:0,moved:false,id:e.pointerId,sx:e.clientX,sy:e.clientY,onH,onC};Z=CFG.mkPos;Zc=CFG.mkCorner;
     mk.style.left=r.left+'px';mk.style.top=r.top+'px';mk.style.right='auto';mk.style.bottom='auto';mk.style.transform='none';mk.classList.add('drag');cancelAnimationFrame(raf);raf=requestAnimationFrame(loop)});
   mk.addEventListener('pointermove',e=>{if(!st||e.pointerId!==st.id)return;if(Math.hypot(e.clientX-st.sx,e.clientY-st.sy)>6)st.moved=true;
     if(st.moved){const z=mkZone(e.clientX,e.clientY,Z);
-      if(z.m!==Z||(z.m==='c'&&z.corner!==Zc)){Z=z.m;Zc=z.corner;mkMorph(()=>{mkMode(z.m,z.corner,true);const r=mk.getBoundingClientRect(),h=z.m==='c'?r:$('#mkh').getBoundingClientRect();st.gx=h.left+h.width/2-r.left;st.gy=z.m==='c'?r.height/2:h.top+h.height/2-r.top})}}
-    st.tx=e.clientX-st.gx;st.ty=e.clientY-st.gy});
+      if(z.m!==Z||(z.m==='c'&&z.corner!==Zc)){Z=z.m;Zc=z.corner;mkMorph(()=>{const q0=mk.getBoundingClientRect();mkMode(z.m,z.corner,true);const r=mk.getBoundingClientRect(),h=z.m==='c'?r:$('#mkh').getBoundingClientRect();const fx=q0.width?st.gx/q0.width:.5,fy=q0.height?st.gy/q0.height:.5;if(z.m==='c'){st.gxT=r.width/2;st.gyT=r.height/2}else{st.gxT=fx*r.width;st.gyT=fy*r.height}},{drag:true})}}
+    st.cx=e.clientX;st.cy=e.clientY});
   const up=e=>{if(!st||e.pointerId!==st.id)return;cancelAnimationFrame(raf);const s=st;st=null;mk.classList.remove('drag');
     if(!s.moved){mkPlace(CFG.mkPos);if(s.onC)mkExpand();else if(s.onH)mkMinimize(true);return}
     if(Z==='f')mkPlace('f',s.tx/innerWidth,s.ty/innerHeight);else if(Z==='c')mkPlace('c',Zc);else mkPlace(Z)};
